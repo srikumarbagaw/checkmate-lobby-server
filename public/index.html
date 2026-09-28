@@ -521,6 +521,13 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
 
 <div id="card304Root" hidden>
 <style>
+/* Full-viewport overlay: when shown, 304 sits on top of the chess page
+   entirely (not stacked below it in the normal document flow), and the
+   [hidden] attribute always wins even against the position:fixed below. */
+#card304Root[hidden]{ display:none !important; }
+#card304Root{
+  position:fixed; inset:0; z-index:1000; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
 #card304Root{
   color-scheme: dark;
   --table:#171c38; --table-2:#212852; --table-3:#2c3566;
