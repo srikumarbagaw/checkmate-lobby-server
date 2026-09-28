@@ -96,6 +96,93 @@ button{font-family:var(--font-body);}
 .lobby-empty{color:var(--ink-dim); font-style:italic; background:none !important;}
 .lobby-chat-log{height:160px; overflow-y:auto; background:var(--surface-2); border-radius:8px; padding:8px; font-size:.85rem; display:flex; flex-direction:column; gap:4px;}
 .lobby-chat-msg strong{color:var(--accent);}
+/* "Peek at lobby" drawer: while a 304 table is on screen (its own
+   full-viewport overlay sits at z-index:1000), this same #onlineLobbyStep
+   element can be lifted above it as a floating panel, without touching its
+   normal in-flow layout when a 304 table isn't active. */
+#onlineLobbyStep.lobby-peek-drawer{
+  position:fixed; top:0; right:0; height:100vh; width:min(380px, 92vw);
+  z-index:2000; margin:0; padding:16px 16px 20px; overflow-y:auto;
+  background:var(--surface); border-left:1px solid var(--border);
+  box-shadow:-12px 0 32px rgba(0,0,0,.45);
+}
+#onlineLobbyStep.lobby-peek-drawer .lobby-grid{grid-template-columns:1fr; margin-top:0;}
+.lobby-peek-backdrop{position:fixed; inset:0; z-index:1999; background:rgba(0,0,0,.35);}
+.lobby-peek-close{width:100%; margin-bottom:4px;}
+#lobbyPeekToggleBtn{position:fixed; top:14px; right:14px; z-index:2001; box-shadow:0 4px 16px rgba(0,0,0,.35);}
+#lobbyPeekToggleBtn[hidden]{display:none !important;}
+
+/* ---------- Roblox-style game hub redesign for the online lobby ---------- */
+.rbx-lobby{
+  --rbx-bg:#F2F4F8; --rbx-card:#FFFFFF; --rbx-line:#E4E8EF;
+  --rbx-ink:#1C1E21; --rbx-dim:#6B7280;
+  --rbx-blue:#00A2FF; --rbx-blue-dark:#0089DB;
+  --rbx-green:#00B67A; --rbx-red:#FF3B5C;
+  background:var(--rbx-bg) !important; border:1px solid var(--rbx-line) !important;
+  border-radius:18px !important; box-shadow:0 16px 40px -18px rgba(20,24,34,.35) !important;
+  color:var(--rbx-ink); padding:18px !important;
+}
+.rbx-lobby .capture-hint{color:var(--rbx-dim);}
+.rbx-lobby .capture-status{color:var(--rbx-dim);}
+.rbx-lobby input.btn{background:#fff; border:1px solid var(--rbx-line); color:var(--rbx-ink); border-radius:10px; font-weight:500;}
+.rbx-lobby .btn-primary{
+  background:linear-gradient(180deg, var(--rbx-blue), var(--rbx-blue-dark)); border:none; color:#fff;
+  font-weight:800; letter-spacing:.02em; border-radius:12px;
+  box-shadow:0 6px 0 var(--rbx-blue-dark), 0 10px 20px -8px rgba(0,137,219,.55);
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.rbx-lobby .btn-primary:hover{transform:translateY(-2px);}
+.rbx-lobby .btn-primary:active{transform:translateY(1px); box-shadow:0 3px 0 var(--rbx-blue-dark);}
+.rbx-lobby #onlineConnectBtn{padding:10px 20px;}
+
+.rbx-hub-header{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--rbx-line);}
+.rbx-hub-title{display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-weight:700; font-size:1.15rem; color:var(--rbx-ink);}
+.rbx-hub-title .emoji{font-size:1.3rem;}
+.rbx-online-badge{display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--rbx-line); border-radius:999px; padding:5px 12px; font-size:.78rem; font-weight:700; color:var(--rbx-dim);}
+.rbx-online-dot{width:8px; height:8px; border-radius:50%; background:var(--rbx-green); box-shadow:0 0 0 3px rgba(0,182,122,.18); animation:rbxPulse 2s infinite;}
+@keyframes rbxPulse{0%,100%{opacity:1;} 50%{opacity:.45;}}
+
+.rbx-lobby .lobby-section-title{color:var(--rbx-dim); font-weight:800; font-size:.72rem; letter-spacing:.06em;}
+.rbx-lobby #onlineUsersList{max-height:180px;}
+.rbx-lobby #onlineUsersList li{background:var(--rbx-card); border:1px solid var(--rbx-line); border-radius:12px; padding:8px 10px;}
+.rbx-user-row{display:flex; align-items:center; gap:9px; width:100%;}
+.rbx-avatar{width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:.8rem; flex:none; position:relative;}
+.rbx-avatar::after{content:''; position:absolute; right:-2px; bottom:-2px; width:9px; height:9px; border-radius:50%; background:var(--rbx-green); border:2px solid var(--rbx-card);}
+.rbx-user-name{font-weight:600; font-size:.88rem; color:var(--rbx-ink);}
+.rbx-user-you{font-size:.7rem; font-weight:700; color:var(--rbx-blue); margin-left:auto; background:rgba(0,162,255,.12); padding:2px 8px; border-radius:999px;}
+
+.rbx-create-row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:8px 0 12px;}
+@media (max-width:520px){.rbx-create-row{grid-template-columns:1fr;}}
+.rbx-create-card{display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; padding:12px 14px; border-radius:14px; border:none; cursor:pointer; color:#fff; font-family:var(--font-body);}
+.rbx-create-card .rbx-create-icon{font-size:1.4rem;}
+.rbx-create-card .rbx-create-label{font-weight:800; font-size:.92rem;}
+.rbx-create-card .rbx-create-sub{font-weight:500; font-size:.72rem; opacity:.85;}
+#onlineHostChessBtn.rbx-create-card{background:linear-gradient(160deg,#3A3F51,#1C1E29); box-shadow:0 6px 0 #101119, 0 10px 20px -8px rgba(0,0,0,.5);}
+#onlineHost304Btn.rbx-create-card{background:linear-gradient(160deg, var(--rbx-red), #C81640); box-shadow:0 6px 0 #A30F34, 0 10px 20px -8px rgba(200,22,64,.5);}
+.rbx-create-card:hover{transform:translateY(-2px);}
+.rbx-create-card:active{transform:translateY(1px) !important; box-shadow:0 3px 0 rgba(0,0,0,.4) !important;}
+
+.rbx-lobby #onlineGamesList{max-height:220px;}
+.rbx-lobby #onlineGamesList li{background:var(--rbx-card); border:1px solid var(--rbx-line); border-radius:14px; padding:10px 12px; transition:transform .12s ease, box-shadow .12s ease;}
+.rbx-lobby #onlineGamesList li:hover{transform:translateY(-2px); box-shadow:0 10px 20px -10px rgba(20,24,34,.25);}
+.rbx-game-tile{display:flex; align-items:center; gap:10px; width:100%;}
+.rbx-game-icon{width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex:none; color:#fff;}
+.rbx-game-icon.chess{background:linear-gradient(160deg,#3A3F51,#1C1E29);}
+.rbx-game-icon.c304{background:linear-gradient(160deg, var(--rbx-red), #C81640);}
+.rbx-game-info{display:flex; flex-direction:column; gap:1px; min-width:0;}
+.rbx-game-title{font-weight:700; font-size:.86rem; color:var(--rbx-ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.rbx-game-meta{font-size:.74rem; color:var(--rbx-dim); display:flex; gap:6px; align-items:center;}
+.rbx-player-pill{background:var(--rbx-bg); border:1px solid var(--rbx-line); border-radius:999px; padding:1px 8px; font-weight:700;}
+.rbx-game-tile .btn{margin-left:auto; flex:none; border-radius:10px; font-weight:800; font-size:.8rem; padding:7px 14px;}
+.rbx-join-btn{background:var(--rbx-blue); color:#fff; border:none; box-shadow:0 4px 0 var(--rbx-blue-dark);}
+.rbx-join-btn:hover{transform:translateY(-1px);}
+.rbx-cancel-btn{background:#fff; color:var(--rbx-red); border:1px solid var(--rbx-line);}
+
+.rbx-lobby .lobby-chat-log{background:var(--rbx-card); border:1px solid var(--rbx-line); border-radius:14px;}
+.rbx-chat-bubble{display:flex; gap:6px; align-items:baseline; background:var(--rbx-bg); border-radius:10px; padding:5px 9px; font-size:.82rem;}
+.rbx-chat-name{font-weight:800; flex:none;}
+.rbx-lobby #onlineChatInput{border-radius:999px !important; padding-left:14px;}
+.rbx-lobby #onlineChatSendBtn{border-radius:999px; background:var(--rbx-blue); color:#fff; border:none; font-weight:800; box-shadow:0 4px 0 var(--rbx-blue-dark);}
 .capture-preview-wrap{position:relative; width:100%; max-width:420px; background:#000; border-radius:8px; overflow:hidden; touch-action:none;}
 .capture-preview-wrap video{display:block; width:100%; height:auto;}
 .capture-rect{position:absolute; border:2px dashed var(--accent); box-shadow:0 0 0 9999px rgba(0,0,0,.55); pointer-events:none;}
@@ -378,7 +465,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
           </div>
 
-          <div class="capture-panel" id="onlinePanel" hidden>
+          <div class="capture-panel rbx-lobby" id="onlinePanel" hidden>
             <div id="onlineConnectStep">
               <p class="capture-hint">Enter your name and connect to the lobby to see who's online, chat, and start or join a game.</p>
               <div class="capture-row">
@@ -390,15 +477,28 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
 
             <div id="onlineLobbyStep" hidden>
+              <div class="rbx-hub-header">
+                <div class="rbx-hub-title"><span class="emoji">🎮</span> Game Hub</div>
+                <span class="rbx-online-badge"><span class="rbx-online-dot"></span><span id="onlineCountBadge">0 online</span></span>
+              </div>
               <div class="lobby-grid">
                 <div class="lobby-col">
                   <div class="lobby-section-title">Online now</div>
                   <ul class="lobby-list" id="onlineUsersList"></ul>
-                  <div class="lobby-section-title">Games</div>
-                  <div class="capture-row">
-                    <button class="btn btn-primary" id="onlineHostChessBtn">Host a Chess game</button>
-                    <button class="btn btn-primary" id="onlineHost304Btn">Host a 304 table</button>
+                  <div class="lobby-section-title">Host a game</div>
+                  <div class="rbx-create-row">
+                    <button class="btn btn-primary rbx-create-card" id="onlineHostChessBtn">
+                      <span class="rbx-create-icon">♟️</span>
+                      <span class="rbx-create-label">Host Chess</span>
+                      <span class="rbx-create-sub">1v1 · classic rules</span>
+                    </button>
+                    <button class="btn btn-primary rbx-create-card" id="onlineHost304Btn">
+                      <span class="rbx-create-icon">🃏</span>
+                      <span class="rbx-create-label">Host 304 Table</span>
+                      <span class="rbx-create-sub">Up to 4 players</span>
+                    </button>
                   </div>
+                  <div class="lobby-section-title">Open games</div>
                   <ul class="lobby-list" id="onlineGamesList"></ul>
                 </div>
                 <div class="lobby-col">
@@ -519,6 +619,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
   </main>
 </div>
 
+<button id="lobbyPeekToggleBtn" class="btn" type="button" hidden title="Peek at who's online and the lobby chat">👥 Lobby</button>
 <div id="card304Root" hidden>
 <style>
 /* Full-viewport overlay: when shown, 304 sits on top of the chess page
@@ -3110,11 +3211,32 @@ var LESSONS = [
     }
   }
 
+  // Small deterministic "avatar color" so the same name always gets the same
+  // tile color, the way a game platform's friends list does.
+  const RBX_AVATAR_COLORS = ['#00A2FF', '#FF3B5C', '#00B67A', '#FF9F1C', '#8B5CF6', '#0EA5B7', '#F45B8D', '#4C6EF5'];
+  function rbxAvatarColor(name) {
+    let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return RBX_AVATAR_COLORS[h % RBX_AVATAR_COLORS.length];
+  }
+  function rbxInitials(name) {
+    return (name.trim().slice(0, 2) || '?').toUpperCase();
+  }
+
+  const onlineCountBadge = document.getElementById('onlineCountBadge');
+
   function renderOnlineLobby(users, games) {
+    if (onlineCountBadge) onlineCountBadge.textContent = users.length + (users.length === 1 ? ' online' : ' online');
+
     onlineUsersList.innerHTML = '';
     users.forEach(u => {
       const li = document.createElement('li');
-      li.textContent = u.name + (u.name === onlineMyName ? ' (you)' : '');
+      const row = document.createElement('div'); row.className = 'rbx-user-row';
+      const avatar = document.createElement('span'); avatar.className = 'rbx-avatar';
+      avatar.style.background = rbxAvatarColor(u.name); avatar.textContent = rbxInitials(u.name);
+      const name = document.createElement('span'); name.className = 'rbx-user-name'; name.textContent = u.name;
+      row.appendChild(avatar); row.appendChild(name);
+      if (u.name === onlineMyName) { const you = document.createElement('span'); you.className = 'rbx-user-you'; you.textContent = 'YOU'; row.appendChild(you); }
+      li.appendChild(row);
       onlineUsersList.appendChild(li);
     });
     if (!users.length) { const li = document.createElement('li'); li.className = 'lobby-empty'; li.textContent = 'No one else online yet.'; onlineUsersList.appendChild(li); }
@@ -3123,22 +3245,33 @@ var LESSONS = [
     games.forEach(g => {
       const li = document.createElement('li');
       const isMine = g.id === onlineHostingGameId;
-      const kindLabel = g.kind === '304' ? '304 table' : 'Chess game';
-      const countLabel = g.kind === '304' ? ' (' + g.count + '/' + g.capacity + ')' : '';
-      const span = document.createElement('span'); span.textContent = g.hostName + "'s " + kindLabel + countLabel + (isMine ? ' — waiting...' : '');
-      li.appendChild(span);
-      const btn = document.createElement('button'); btn.className = 'btn';
-      if (isMine) { btn.textContent = 'Cancel'; btn.addEventListener('click', () => { onlineSend({ t: 'cancel' }); onlineHostingGameId = null; }); }
-      else { btn.textContent = 'Join'; btn.addEventListener('click', () => onlineSend({ t: 'join', id: g.id })); }
-      li.appendChild(btn);
+      const is304 = g.kind === '304';
+      const kindLabel = is304 ? '304 table' : 'Chess game';
+      const countLabel = is304 ? (g.count + '/' + g.capacity + ' players') : (g.count + '/' + g.capacity + ' players');
+
+      const tile = document.createElement('div'); tile.className = 'rbx-game-tile';
+      const icon = document.createElement('span'); icon.className = 'rbx-game-icon ' + (is304 ? 'c304' : 'chess'); icon.textContent = is304 ? '🃏' : '♟️';
+      const info = document.createElement('span'); info.className = 'rbx-game-info';
+      const title = document.createElement('span'); title.className = 'rbx-game-title'; title.textContent = g.hostName + "'s " + kindLabel;
+      const meta = document.createElement('span'); meta.className = 'rbx-game-meta';
+      const pill = document.createElement('span'); pill.className = 'rbx-player-pill'; pill.textContent = countLabel;
+      meta.appendChild(pill);
+      if (isMine) { const waiting = document.createElement('span'); waiting.textContent = 'Waiting for players…'; meta.appendChild(waiting); }
+      info.appendChild(title); info.appendChild(meta);
+      const btn = document.createElement('button');
+      if (isMine) { btn.className = 'btn rbx-cancel-btn'; btn.textContent = 'Cancel'; btn.addEventListener('click', () => { onlineSend({ t: 'cancel' }); onlineHostingGameId = null; }); }
+      else { btn.className = 'btn rbx-join-btn'; btn.textContent = 'Join'; btn.addEventListener('click', () => onlineSend({ t: 'join', id: g.id })); }
+      tile.appendChild(icon); tile.appendChild(info); tile.appendChild(btn);
+      li.appendChild(tile);
       onlineGamesList.appendChild(li);
     });
     if (!games.length) { const li = document.createElement('li'); li.className = 'lobby-empty'; li.textContent = 'No open games — host one!'; onlineGamesList.appendChild(li); }
   }
 
   function appendOnlineChat(name, text) {
-    const div = document.createElement('div'); div.className = 'lobby-chat-msg';
-    const strong = document.createElement('strong'); strong.textContent = name + ': ';
+    const div = document.createElement('div'); div.className = 'rbx-chat-bubble';
+    const strong = document.createElement('span'); strong.className = 'rbx-chat-name';
+    strong.style.color = rbxAvatarColor(name); strong.textContent = name + ':';
     div.appendChild(strong);
     div.appendChild(document.createTextNode(text));
     onlineChatLog.appendChild(div);
@@ -3187,6 +3320,45 @@ var LESSONS = [
     leave() { onlineSend({ t: 'leave' }); },
     backToLobby() { onlineShowStep('lobby'); },
   };
+
+  // "Peek at lobby" — the common lobby (#onlineLobbyStep) keeps receiving
+  // live users/games/chat updates the whole time a 304 table is on screen;
+  // it's just visually covered by #card304Root's full-viewport overlay. This
+  // button lives outside #card304Root (so it's reachable no matter which
+  // internal 304 screen — table setup, or the game itself — is showing) and
+  // lifts the common lobby above that overlay as a floating drawer, without
+  // leaving the table or touching any 304 game state.
+  const lobbyPeekToggleBtn = document.getElementById('lobbyPeekToggleBtn');
+  const card304RootEl = document.getElementById('card304Root');
+  let lobbyPeekBackdrop = null;
+  function setLobbyPeek(on) {
+    onlineLobbyStep.classList.toggle('lobby-peek-drawer', on);
+    if (lobbyPeekToggleBtn) lobbyPeekToggleBtn.setAttribute('aria-pressed', String(on));
+    if (on) {
+      if (!lobbyPeekBackdrop) {
+        lobbyPeekBackdrop = document.createElement('div');
+        lobbyPeekBackdrop.className = 'lobby-peek-backdrop';
+        lobbyPeekBackdrop.addEventListener('click', () => setLobbyPeek(false));
+        document.body.appendChild(lobbyPeekBackdrop);
+      }
+    } else if (lobbyPeekBackdrop) {
+      lobbyPeekBackdrop.remove();
+      lobbyPeekBackdrop = null;
+    }
+  }
+  if (lobbyPeekToggleBtn) {
+    lobbyPeekToggleBtn.addEventListener('click', () => {
+      setLobbyPeek(!onlineLobbyStep.classList.contains('lobby-peek-drawer'));
+    });
+  }
+  // Show the toggle only while a 304 table is actually on screen, and
+  // auto-close the drawer once it's put away so nothing is left stuck open.
+  if (card304RootEl && lobbyPeekToggleBtn) {
+    new MutationObserver(() => {
+      lobbyPeekToggleBtn.hidden = card304RootEl.hidden;
+      if (card304RootEl.hidden) setLobbyPeek(false);
+    }).observe(card304RootEl, { attributes: true, attributeFilter: ['hidden'] });
+  }
 
   render();
 
