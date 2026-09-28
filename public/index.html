@@ -297,6 +297,18 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
 .sq.dest-capture::before{content:"";position:absolute;inset:6%;border-radius:50%;box-shadow:0 0 0 4px var(--dest-ring) inset;}
 .sq.dest-capture.risky::before{box-shadow:0 0 0 4px var(--dest-risky) inset;}
 .hint-arrow-layer{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:5; overflow:visible;}
+/* Who-you're-playing status: an overlay badge sitting on the board itself
+   (top-left corner) instead of its own full-width row above it. Solid
+   (non-transparent) background so it stays legible without washing out or
+   fighting with the squares/pieces underneath it. */
+.board-status-badge{
+  position:absolute; top:10px; left:10px; z-index:6; max-width:calc(100% - 20px);
+  background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:6px 12px; box-shadow:0 6px 18px -6px rgba(0,0,0,.35);
+  font-family:var(--font-mono); font-size:.8rem; color:var(--ink-dim);
+  pointer-events:none;
+}
+.board-status-badge[hidden]{display:none !important;}
 .hint-arrow-layer .hint-arrow-shaft{stroke:var(--hint-arrow); fill:none; stroke-linecap:butt; stroke-linejoin:miter; opacity:.82;}
 .hint-arrow-layer .hint-arrow-head{fill:var(--hint-arrow); opacity:.82;}
 .sq .coord{position:absolute; font-family:var(--font-mono); font-size:.78rem; font-weight:700; color:var(--ink-dim); opacity:.75; pointer-events:none;}
@@ -532,16 +544,6 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
           </div>
 
-          <div class="capture-panel rbx-lobby rbx-panel-card" id="onlinePanel" hidden>
-            <!-- The "Leave game" button itself now lives in the header next
-                 to New game/Game Hub; this just shows who you're playing. -->
-            <div id="onlineGameStep" hidden>
-              <div class="capture-row">
-                <span class="capture-status" id="onlineGameStatus"></span>
-              </div>
-            </div>
-          </div>
-
           <!-- The Game Hub (online users, host buttons, open games, chat) lives
                here as its own top-level element rather than inside #onlinePanel,
                so it isn't affected by that panel's own show/hide toggle: once
@@ -587,6 +589,9 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             <div class="board-frame">
               <div class="board" id="playBoard"></div>
               <svg class="hint-arrow-layer" id="hintArrowLayer" viewBox="0 0 100 100"></svg>
+              <div class="board-status-badge" id="onlineGameStep" hidden>
+                <span id="onlineGameStatus"></span>
+              </div>
             </div>
             <div class="eval-row">
               <span>W</span>
@@ -2870,14 +2875,12 @@ var LESSONS = [
   buildBoardSquares(playBoardEl, orientation, false);
   const configureCaptureBtn = document.getElementById('configureCaptureBtn');
   const capturePanel = document.getElementById('capturePanel');
-  const onlinePanel = document.getElementById('onlinePanel');
   const autoCoachRow = document.getElementById('autoCoachRow');
   function applyModeVisibility() {
     colorSelect.hidden = mode === 'manual' || mode === 'online';
     levelSelect.hidden = mode !== 'engine';
     configureCaptureBtn.hidden = mode !== 'capture';
     if (mode !== 'capture') capturePanel.hidden = true;
-    onlinePanel.hidden = mode !== 'online';
     // There's no dropdown option for online mode any more — the Game Hub
     // gate is the only way in — so the dropdown itself has nothing useful to
     // show while a game is online; hide it rather than leave it blank.
