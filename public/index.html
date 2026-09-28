@@ -1,0 +1,2633 @@
+<title>Checkmate Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F1E8; --surface:#FFFFFF; --surface-2:#ECE4D3;
+  --ink:#241F18; --ink-dim:#6B6153;
+  --accent:#8B5A2B; --accent-strong:#6E4520; --accent-ink:#FFFFFF;
+  --board-light:#F0E4C8; --board-dark:#8B6F47;
+  --good:#3C7A5C; --good-bg:#E3EEE6; --warn:#B8863C; --warn-bg:#F3E9D3; --bad:#B14A3E; --bad-bg:#F5E1DD;
+  --border:#DED3BB;
+  --piece-white:#FBF7EE; --piece-black:#241F18;
+  --piece-white-stroke: rgba(36,31,24,.85); --piece-black-stroke: rgba(251,247,238,.8);
+  --sel: rgba(139,90,43,.42); --dest-safe: rgba(60,122,92,.62); --dest-risky: rgba(184,134,60,.68);
+  --dest-ring: rgba(177,74,62,.75); --last-move: rgba(184,134,60,.38); --check-ring: rgba(177,74,62,.6);
+  --hint-arrow: #E0791C; --hint-arrow-stroke: rgba(36,31,24,.55);
+  --shadow: 0 12px 32px -14px rgba(36,31,24,.35);
+  --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+  --font-body:'Work Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'Space Mono',ui-monospace,'SF Mono',Consolas,monospace;
+  --font-pieces:'Noto Sans Symbols 2','Segoe UI Symbol','Apple Symbols',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141109; --surface:#1D1912; --surface-2:#27211A;
+    --ink:#EDE6D5; --ink-dim:#A89C86;
+    --accent:#D2A25C; --accent-strong:#E4B36E; --accent-ink:#1D1912;
+    --board-light:#4C4635; --board-dark:#28241C;
+    --good:#5FAE85; --good-bg:#1E2C26; --warn:#E0B15E; --warn-bg:#332A18; --bad:#E17B6C; --bad-bg:#33211D;
+    --border:#3A342A;
+    --piece-white:#F3EEDF; --piece-black:#15120D;
+    --piece-white-stroke: rgba(10,9,6,.9); --piece-black-stroke: rgba(243,238,223,.8);
+    --sel: rgba(210,162,92,.42); --dest-safe: rgba(95,174,133,.6); --dest-risky: rgba(224,177,94,.6);
+    --dest-ring: rgba(225,123,108,.75); --last-move: rgba(210,162,92,.32); --check-ring: rgba(225,123,108,.65);
+    --hint-arrow: #F0973C; --hint-arrow-stroke: rgba(10,9,6,.6);
+    --shadow: 0 12px 32px -14px rgba(0,0,0,.65);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141109; --surface:#1D1912; --surface-2:#27211A;
+  --ink:#EDE6D5; --ink-dim:#A89C86;
+  --accent:#D2A25C; --accent-strong:#E4B36E; --accent-ink:#1D1912;
+  --board-light:#4C4635; --board-dark:#28241C;
+  --good:#5FAE85; --good-bg:#1E2C26; --warn:#E0B15E; --warn-bg:#332A18; --bad:#E17B6C; --bad-bg:#33211D;
+  --border:#3A342A;
+  --piece-white:#F3EEDF; --piece-black:#15120D;
+  --piece-white-stroke: rgba(10,9,6,.9); --piece-black-stroke: rgba(243,238,223,.8);
+  --sel: rgba(210,162,92,.42); --dest-safe: rgba(95,174,133,.6); --dest-risky: rgba(224,177,94,.6);
+  --dest-ring: rgba(225,123,108,.75); --last-move: rgba(210,162,92,.32); --check-ring: rgba(225,123,108,.65);
+  --hint-arrow: #F0973C; --hint-arrow-stroke: rgba(10,9,6,.6);
+  --shadow: 0 12px 32px -14px rgba(0,0,0,.65);
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); line-height:1.5;
+  padding-inline:16px;
+}
+.wrap{max-width:1520px; margin:0 auto; padding-block:20px 48px;}
+h1,h2,h3{font-family:var(--font-display); font-weight:600; text-wrap:balance; margin:0;}
+a{color:var(--accent-strong);}
+button{font-family:var(--font-body);}
+
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  flex-wrap:wrap; padding-bottom:18px; margin-bottom:20px; border-bottom:1px solid var(--border);
+}
+.brand{display:flex; align-items:center; gap:10px;}
+.brand-mark{font-family:var(--font-pieces); font-size:2rem; color:var(--accent);}
+.brand h1{font-size:1.5rem; letter-spacing:.01em;}
+.brand p{margin:2px 0 0; font-size:.8rem; color:var(--ink-dim); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.08em;}
+
+.tabs{display:flex; gap:4px; background:var(--surface-2); padding:4px; border-radius:999px;}
+.tab{
+  border:none; background:transparent; color:var(--ink-dim); font-weight:600; font-size:.9rem;
+  padding:9px 18px; border-radius:999px; cursor:pointer; transition:background .15s, color .15s;
+}
+.tab.active{background:var(--accent); color:var(--accent-ink);}
+.tab:not(.active):hover{color:var(--ink);}
+.tab:focus-visible, button:focus-visible, .sq:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+/* ---------- Screen capture panel ---------- */
+.capture-panel{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px;}
+.capture-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.capture-status{font-size:.82rem; color:var(--ink-dim); font-family:var(--font-mono);}
+.capture-hint{margin:0; font-size:.8rem; color:var(--ink-dim);}
+.code-display{font-family:var(--font-mono); font-size:1.6rem; font-weight:700; letter-spacing:.28em; background:var(--surface-2); border:1px dashed var(--accent); border-radius:8px; padding:6px 16px; color:var(--ink);}
+.code-input{font-family:var(--font-mono); font-size:1.4rem; font-weight:700; letter-spacing:.28em; text-transform:uppercase; width:130px; text-align:center;}
+.lobby-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px;}
+@media (max-width: 720px){ .lobby-grid{grid-template-columns:1fr;} }
+.lobby-section-title{font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-dim); margin:10px 0 6px;}
+.lobby-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto;}
+.lobby-list li{display:flex; align-items:center; justify-content:space-between; gap:8px; background:var(--surface-2); border-radius:8px; padding:6px 10px; font-size:.85rem;}
+.lobby-empty{color:var(--ink-dim); font-style:italic; background:none !important;}
+.lobby-chat-log{height:160px; overflow-y:auto; background:var(--surface-2); border-radius:8px; padding:8px; font-size:.85rem; display:flex; flex-direction:column; gap:4px;}
+.lobby-chat-msg strong{color:var(--accent);}
+.capture-preview-wrap{position:relative; width:100%; max-width:420px; background:#000; border-radius:8px; overflow:hidden; touch-action:none;}
+.capture-preview-wrap video{display:block; width:100%; height:auto;}
+.capture-rect{position:absolute; border:2px dashed var(--accent); box-shadow:0 0 0 9999px rgba(0,0,0,.55); pointer-events:none;}
+.capture-grid-canvas{position:absolute; inset:0; width:100%; height:100%; pointer-events:none;}
+.capture-handle{position:absolute; width:16px; height:16px; margin:-8px; border-radius:50%; background:var(--accent); border:2px solid #fff; pointer-events:auto; touch-action:none;}
+.capture-handle.tl{top:0; left:0; cursor:nwse-resize;}
+.capture-handle.br{bottom:0; right:0; cursor:nwse-resize;}
+.capture-candidates{display:flex; flex-wrap:wrap; gap:8px;}
+.capture-candidates button{font-family:var(--font-mono); font-weight:700;}
+.capture-manual{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.85rem; color:var(--ink-dim); padding-top:8px; border-top:1px dashed var(--border);}
+#manualMoveInput{font-family:var(--font-mono); cursor:text;}
+.capture-debug{display:flex; flex-direction:column; gap:12px; padding-top:10px; border-top:1px dashed var(--border);}
+.debug-section{display:flex; flex-direction:column; gap:6px;}
+.debug-label{font-family:var(--font-mono); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--accent-strong);}
+.debug-label .debug-sub{font-family:var(--font-body); font-weight:400; text-transform:none; letter-spacing:0; color:var(--ink-dim); font-size:.78rem;}
+.debug-swatch-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+#debugSwatchCanvas{border-radius:6px; border:1px solid var(--border); image-rendering:pixelated;}
+.debug-diff-table{border-collapse:collapse; font-family:var(--font-mono); font-size:.78rem; width:100%; max-width:320px;}
+.debug-diff-table th{text-align:left; color:var(--ink-dim); font-weight:600; padding:3px 8px 3px 0; border-bottom:1px solid var(--border);}
+.debug-diff-table td{padding:3px 8px 3px 0; border-bottom:1px solid var(--border);}
+.debug-diff-table tr.used td{color:var(--good); font-weight:700;}
+.debug-log{margin:0; max-height:200px; overflow-y:auto; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-family:var(--font-mono); font-size:.72rem; line-height:1.6; white-space:pre-wrap; word-break:break-word; color:var(--ink-dim);}
+.debug-log .log-time{color:var(--accent-strong); font-weight:700;}
+
+/* ---------- Play layout ---------- */
+.play-grid{display:grid; grid-template-columns:minmax(360px,1040px) minmax(280px,1fr); gap:24px; align-items:start;}
+@media (max-width:860px){ .play-grid{grid-template-columns:1fr;} }
+
+.board-toolbar{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px;
+}
+.btn{
+  border:1px solid var(--border); background:var(--surface); color:var(--ink);
+  padding:8px 14px; border-radius:8px; font-size:.85rem; font-weight:600; cursor:pointer;
+  transition:border-color .15s, transform .1s;
+}
+.btn:hover{border-color:var(--accent);}
+.btn:active{transform:translateY(1px);}
+.btn-primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+select.btn{font-weight:600; appearance:none; padding-right:28px;
+  background-image:linear-gradient(45deg,transparent 50%,var(--ink-dim) 50%),linear-gradient(135deg,var(--ink-dim) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 55%, calc(100% - 10px) 55%; background-size:5px 5px; background-repeat:no-repeat;
+}
+.toggle-row{display:flex; align-items:center; gap:8px; font-size:.82rem; color:var(--ink-dim); margin-left:auto;}
+.toggle-row input{accent-color:var(--accent);}
+
+.board-shell{background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; box-shadow:var(--shadow);}
+.board-frame{position:relative;}
+.board{
+  display:grid; grid-template-columns:repeat(8,1fr); grid-template-rows:repeat(8,1fr);
+  aspect-ratio:1; width:100%; border-radius:8px; overflow:hidden; border:1px solid var(--border);
+}
+.sq{
+  position:relative; border:none; padding:0; aspect-ratio:1; cursor:pointer;
+  font-family:var(--font-pieces); font-size:min(10vw,80px); line-height:1;
+  display:flex; align-items:center; justify-content:center;
+}
+.board.mini .sq{cursor:default; font-size:min(5vw,28px);}
+.sq.light{background:var(--board-light);}
+.sq.dark{background:var(--board-dark);}
+.sq .glyph.w{color:var(--piece-white); text-shadow:0 0 1px var(--piece-white-stroke),0 0 3px var(--piece-white-stroke);}
+.sq .glyph.b{color:var(--piece-black); text-shadow:0 0 1px var(--piece-black-stroke);}
+.sq.selected::before{content:"";position:absolute;inset:0;background:var(--sel);}
+.sq.last::before{content:"";position:absolute;inset:0;background:var(--last-move);}
+.sq.check::after{content:"";position:absolute;inset:6%;border-radius:50%;box-shadow:0 0 0 4px var(--check-ring) inset, 0 0 16px 2px var(--check-ring);}
+.sq.dest-empty::after{content:"";position:absolute; width:28%; height:28%; border-radius:50%; background:var(--dest-safe);}
+.sq.dest-empty.risky::after{background:var(--dest-risky);}
+.sq.dest-capture::before{content:"";position:absolute;inset:6%;border-radius:50%;box-shadow:0 0 0 4px var(--dest-ring) inset;}
+.sq.dest-capture.risky::before{box-shadow:0 0 0 4px var(--dest-risky) inset;}
+.hint-arrow-layer{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:5; overflow:visible;}
+.hint-arrow-layer .hint-arrow-shaft{stroke:var(--hint-arrow); fill:none; stroke-linecap:butt; stroke-linejoin:miter; opacity:.82;}
+.hint-arrow-layer .hint-arrow-head{fill:var(--hint-arrow); opacity:.82;}
+.sq .coord{position:absolute; font-family:var(--font-mono); font-size:.78rem; font-weight:700; color:var(--ink-dim); opacity:.75; pointer-events:none;}
+.sq .coord.file{bottom:2px; right:4px;}
+.sq .coord.rank{top:2px; left:4px;}
+
+.eval-row{display:flex; align-items:center; gap:10px; margin-top:12px; font-family:var(--font-mono); font-size:.8rem;}
+.eval-track{flex:1; height:10px; border-radius:999px; background:var(--board-dark); overflow:hidden; border:1px solid var(--border);}
+.eval-fill{height:100%; background:var(--board-light); transition:width .4s ease;}
+.eval-label{min-width:3.4em; text-align:right; font-variant-numeric:tabular-nums; color:var(--ink-dim);}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow:var(--shadow);}
+.coach-col{display:flex; flex-direction:column; gap:16px;}
+.card h2, .card h3{font-size:1rem;}
+.card h3{margin-bottom:8px;}
+.badge{display:inline-block; font-family:var(--font-mono); font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 9px; border-radius:999px;}
+.badge.best{color:var(--good); background:var(--good-bg);}
+.badge.good{color:var(--good); background:var(--good-bg);}
+.badge.inaccuracy{color:var(--warn); background:var(--warn-bg);}
+.badge.mistake{color:var(--warn); background:var(--warn-bg);}
+.badge.blunder{color:var(--bad); background:var(--bad-bg);}
+.feedback{margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed var(--border);}
+.feedback:empty{display:none;}
+.coach-headline{font-family:var(--font-display); font-size:1.05rem; font-weight:600; margin:6px 0 6px; text-wrap:balance;}
+.coach-reasons{margin:0; padding-left:18px; font-size:.88rem; color:var(--ink-dim); display:flex; flex-direction:column; gap:4px;}
+.coach-status{font-size:.82rem; color:var(--ink-dim); font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.05em;}
+.threats-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+.threats-list li{display:flex; align-items:flex-start; gap:8px; font-size:.85rem; padding:8px; border-radius:8px; background:var(--surface-2); cursor:pointer;}
+.threats-list li:hover{outline:1px solid var(--accent);}
+.threats-list .dot{width:9px; height:9px; border-radius:50%; margin-top:5px; flex:none;}
+.threats-list .dot.mine{background:var(--bad);}
+.threats-list .dot.theirs{background:var(--good);}
+.threats-empty{font-size:.85rem; color:var(--ink-dim); font-style:italic;}
+
+.scoresheet{list-style:none; margin:0; padding:0; max-height:260px; overflow-y:auto; font-family:var(--font-mono); font-size:.85rem;}
+.scoresheet .ply-row{display:grid; grid-template-columns:2.2em 1fr 1fr; gap:8px; padding:4px 6px; border-radius:6px;}
+.scoresheet .ply-row:nth-child(odd){background:var(--surface-2);}
+.scoresheet .num{color:var(--ink-dim);}
+.scoresheet .mv{cursor:default;}
+.scoresheet .mv.hl-blunder{color:var(--bad); font-weight:700;}
+.scoresheet .mv.hl-mistake{color:var(--warn); font-weight:700;}
+
+.result-banner{padding:10px 12px; border-radius:10px; background:var(--good-bg); color:var(--good); font-weight:700; margin-bottom:10px; font-family:var(--font-display); font-size:1.05rem;}
+
+.promo-overlay{position:absolute; inset:0; background:rgba(20,17,9,.55); display:flex; align-items:center; justify-content:center; border-radius:8px; z-index:5;}
+.promo-box{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; display:flex; gap:8px; box-shadow:var(--shadow);}
+.promo-box button{width:56px; height:56px; font-size:2rem; font-family:var(--font-pieces); border-radius:8px; border:1px solid var(--border); background:var(--surface-2); cursor:pointer;}
+.promo-box button:hover{border-color:var(--accent);}
+
+/* ---------- Learn tab ---------- */
+.learn-grid{display:grid; gap:20px;}
+.level-block{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; box-shadow:var(--shadow);}
+.level-block h2{font-size:1.3rem; margin-bottom:4px;}
+.level-block .level-tag{font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-strong); font-weight:700;}
+.level-block ul{margin:10px 0 0; padding-left:20px; font-size:.92rem; color:var(--ink-dim); display:flex; flex-direction:column; gap:6px;}
+.motif-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:14px;}
+.motif-card{background:var(--surface-2); border-radius:12px; padding:12px; display:flex; gap:12px; align-items:center;}
+.motif-card .board.mini{width:96px; flex:none; border-radius:6px;}
+.motif-card .motif-text h4{font-family:var(--font-display); font-size:.95rem; margin:0 0 4px;}
+.motif-card .motif-text p{font-size:.8rem; color:var(--ink-dim); margin:0;}
+
+/* ---------- Puzzles tab ---------- */
+.puzzle-grid{display:grid; grid-template-columns:minmax(280px,420px) 1fr; gap:24px; align-items:start;}
+@media (max-width:860px){ .puzzle-grid{grid-template-columns:1fr;} }
+.puzzle-list{display:flex; flex-direction:column; gap:10px;}
+.puzzle-item{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 14px; cursor:pointer; text-align:left; display:flex; flex-direction:column; gap:2px;}
+.puzzle-item:hover{border-color:var(--accent);}
+.puzzle-item.active{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+.puzzle-item .tag{font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; color:var(--ink-dim); letter-spacing:.06em;}
+.puzzle-item .name{font-weight:600;}
+.puzzle-item.solved .name::after{content:" ✓"; color:var(--good);}
+.puzzle-feedback{padding:10px 12px; border-radius:10px; margin-top:12px; font-weight:600; display:none;}
+.puzzle-feedback.show{display:block;}
+.puzzle-feedback.correct{background:var(--good-bg); color:var(--good);}
+.puzzle-feedback.wrong{background:var(--bad-bg); color:var(--bad);}
+
+/* ---------- Lessons tab ---------- */
+.puzzle-item .mins{font-family:var(--font-mono); font-size:.7rem; color:var(--ink-dim); margin-left:6px;}
+.lesson-progress{display:flex; align-items:center; gap:10px; margin-top:12px; font-family:var(--font-mono); font-size:.75rem; color:var(--ink-dim);}
+.lesson-progress-track{flex:1; height:6px; border-radius:999px; background:var(--surface-2); overflow:hidden;}
+.lesson-progress-fill{height:100%; background:var(--accent); transition:width .3s ease; width:0%;}
+.lesson-progress-label{white-space:nowrap; font-variant-numeric:tabular-nums;}
+.lesson-caption{font-family:var(--font-display); font-size:1.05rem; margin:12px 0 0; min-height:2.6em; text-wrap:balance;}
+.lesson-takeaway{margin-top:10px; padding:10px 12px; border-radius:10px; background:var(--good-bg); color:var(--good); font-size:.85rem; font-weight:600;}
+.lesson-controls{display:flex; gap:8px; margin-top:14px;}
+.lesson-controls .btn{min-width:44px;}
+#lessonPlayPause{flex:1;}
+
+[hidden]{display:none!important;}
+.visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">♞</span>
+      <div>
+        <h1>Checkmate Coach</h1>
+        <p>Play, learn, and train toward mastery</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab active" data-tab="play" role="tab" aria-selected="true">Play</button>
+      <button class="tab" data-tab="learn" role="tab" aria-selected="false">Learn</button>
+      <button class="tab" data-tab="strategy" role="tab" aria-selected="false">Strategy</button>
+      <button class="tab" data-tab="lessons" role="tab" aria-selected="false">Lessons</button>
+      <button class="tab" data-tab="puzzles" role="tab" aria-selected="false">Puzzles</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- PLAY -->
+    <section id="tab-play">
+      <div class="play-grid">
+        <div class="board-col">
+          <div class="board-toolbar">
+            <select id="modeSelect" class="btn" aria-label="Who plays the opponent's moves">
+              <option value="engine" selected>Vs. computer</option>
+              <option value="manual">You move both sides</option>
+              <option value="capture">Capture opponent's move (screen)</option>
+              <option value="online">Play online (lobby)</option>
+            </select>
+            <select id="colorSelect" class="btn" aria-label="Play as">
+              <option value="w" selected>Play as White</option>
+              <option value="b">Play as Black</option>
+            </select>
+            <select id="levelSelect" class="btn" aria-label="Opponent strength">
+              <option value="beginner">Beginner opponent</option>
+              <option value="club" selected>Club-player opponent</option>
+              <option value="expert">Expert opponent</option>
+              <option value="master">Master opponent</option>
+            </select>
+            <button class="btn" id="configureCaptureBtn" hidden>Configure capture</button>
+            <button class="btn" id="configureOnlineBtn" hidden>Online lobby</button>
+            <button class="btn btn-primary" id="newGameBtn">New game</button>
+            <button class="btn" id="undoBtn">Undo</button>
+            <button class="btn" id="flipBtn">Flip board</button>
+            <button class="btn" id="hintBtn">Hint</button>
+            <label class="toggle-row" id="autoCoachRow"><input type="checkbox" id="autoCoach" checked> Always show best move</label>
+          </div>
+
+          <div class="capture-panel" id="capturePanel" hidden>
+            <div class="capture-row">
+              <button class="btn btn-primary" id="captureStartBtn">Share screen / window</button>
+              <button class="btn" id="captureStopBtn" hidden>Stop sharing</button>
+              <span class="capture-status" id="captureStatus">Not sharing yet.</span>
+            </div>
+            <div class="capture-row" id="captureRecordRow" hidden>
+              <button class="btn" id="recordStartBtn">Record capture</button>
+              <button class="btn" id="recordStopBtn" hidden>Stop recording</button>
+              <button class="btn" id="recordDownloadBtn" hidden>Download recording</button>
+              <span class="capture-status" id="recordStatus">Not recording.</span>
+            </div>
+            <p class="capture-hint" id="recordHint" hidden>Records exactly what this app is reading from the shared screen — the same video used for move detection, not your whole desktop. Start it before you begin playing, then download the file and attach it here if something needs debugging; it captures what the detector saw, alongside the text log.</p>
+            <div class="capture-preview-wrap" id="capturePreviewWrap" hidden>
+              <video id="captureVideo" autoplay muted playsinline></video>
+              <canvas class="capture-grid-canvas" id="captureGridCanvas"></canvas>
+              <div class="capture-rect" id="captureRect">
+                <div class="capture-handle tl" id="handleTL"></div>
+                <div class="capture-handle br" id="handleBR"></div>
+              </div>
+            </div>
+            <p class="capture-hint" id="captureAlignHint" hidden>Drag the corners so the box exactly frames the 8&times;8 board on the shared screen (no coordinates or border). The thin grid lines should fall exactly on the square boundaries.</p>
+            <label class="toggle-row" id="flipRow" hidden><input type="checkbox" id="captureFlipped"> Captured board is flipped (that site shows Black at the bottom)</label>
+            <div class="capture-row" id="captureSyncRow" hidden>
+              <button class="btn" id="setBaselineBtn">1. Start tracking</button>
+              <button class="btn btn-primary" id="detectMoveBtn">2. Check for a move</button>
+              <button class="btn" id="resyncBtn">Catch up (multiple moves missed)</button>
+              <label class="toggle-row"><input type="checkbox" id="autoDetect"> Auto-detect</label>
+              <label class="toggle-row" style="margin-left:auto;"><input type="checkbox" id="debugToggle"> Debug</label>
+            </div>
+            <p class="capture-hint" id="captureRollingHint" hidden>Click "Start tracking" once, then turn on Auto-detect and leave it running — it keeps checking on its own, and when a single move can't explain what changed (usually because more than one move happened between checks), it automatically tries "Catch up" in the background too, applying it whenever it finds an exact match. You only need "Check for a move" or "Catch up" yourself if Auto-detect is off, or if it reports a guess that isn't exact and needs your OK. Typing the missed move below always works too.</p>
+            <div class="capture-candidates" id="captureCandidates" hidden></div>
+            <div class="capture-manual">
+              <span>Or just type the move:</span>
+              <input type="text" id="manualMoveInput" class="btn" placeholder="e.g. e4, Nf3, Qxf7, O-O" style="width:150px;">
+              <button class="btn" id="manualMoveApply">Apply</button>
+            </div>
+
+            <div class="capture-debug" id="captureDebug" hidden>
+              <div class="debug-section">
+                <div class="debug-label">Stream</div>
+                <div class="capture-status" id="debugStreamInfo">No stream.</div>
+              </div>
+              <div class="debug-section">
+                <div class="debug-label">This app's position so far <span class="debug-sub">(compare against the real board — if these diverge, detection can't work)</span></div>
+                <div class="capture-status" id="debugPositionInfo" style="font-family:var(--font-mono);">1. (start)</div>
+              </div>
+              <div class="debug-section">
+                <div class="debug-label">What the detector sees <span class="debug-sub">(average color sampled per cell, right now)</span></div>
+                <div class="debug-swatch-row">
+                  <canvas id="debugSwatchCanvas" width="176" height="176"></canvas>
+                  <button class="btn" id="debugSampleBtn">Resample</button>
+                </div>
+              </div>
+              <div class="debug-section" id="debugDiffSection" hidden>
+                <div class="debug-label">Last diff <span class="debug-sub">(top changed cells vs. baseline)</span></div>
+                <table class="debug-diff-table" id="debugDiffTable"><thead><tr><th>Square</th><th>Score</th><th>Used</th></tr></thead><tbody></tbody></table>
+              </div>
+              <div class="debug-section">
+                <div class="debug-label" style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                  <span>Event log <span class="debug-sub">(everything the capture flow has done this session)</span></span>
+                  <span style="display:flex; gap:6px;">
+                    <button class="btn" id="debugLogCopy" style="padding:4px 10px; font-size:.72rem;">Copy</button>
+                    <button class="btn" id="debugLogClear" style="padding:4px 10px; font-size:.72rem;">Clear</button>
+                  </span>
+                </div>
+                <pre class="debug-log" id="debugLog"></pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="capture-panel" id="onlinePanel" hidden>
+            <div id="onlineConnectStep">
+              <p class="capture-hint">Enter your name and connect to the lobby to see who's online, chat, and start or join a game.</p>
+              <div class="capture-row">
+                <input type="text" id="onlineNameInput" class="btn" placeholder="Your name" maxlength="20" style="width:160px;">
+                <input type="text" id="onlineServerInput" class="btn" placeholder="wss://your-app.onrender.com" style="width:260px;">
+                <button class="btn btn-primary" id="onlineConnectBtn">Enter lobby</button>
+              </div>
+              <p class="capture-status" id="onlineStatus">Not connected.</p>
+            </div>
+
+            <div id="onlineLobbyStep" hidden>
+              <div class="lobby-grid">
+                <div class="lobby-col">
+                  <div class="lobby-section-title">Online now</div>
+                  <ul class="lobby-list" id="onlineUsersList"></ul>
+                  <div class="lobby-section-title">Games</div>
+                  <div class="capture-row">
+                    <button class="btn btn-primary" id="onlineHostBtn">Host a new game</button>
+                  </div>
+                  <ul class="lobby-list" id="onlineGamesList"></ul>
+                </div>
+                <div class="lobby-col">
+                  <div class="lobby-section-title">Chat</div>
+                  <div class="lobby-chat-log" id="onlineChatLog"></div>
+                  <div class="capture-row">
+                    <input type="text" id="onlineChatInput" class="btn" placeholder="Say something..." style="flex:1;">
+                    <button class="btn" id="onlineChatSendBtn">Send</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="onlineGameStep" hidden>
+              <div class="capture-row">
+                <span class="capture-status" id="onlineGameStatus"></span>
+                <button class="btn" id="onlineLeaveBtn">Leave game (back to lobby)</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="board-shell">
+            <div class="board-frame">
+              <div class="board" id="playBoard"></div>
+              <svg class="hint-arrow-layer" id="hintArrowLayer" viewBox="0 0 100 100"></svg>
+            </div>
+            <div class="eval-row">
+              <span>W</span>
+              <div class="eval-track"><div class="eval-fill" id="evalFill" style="width:50%"></div></div>
+              <span>B</span>
+              <span class="eval-label" id="evalLabel">0.0</span>
+            </div>
+          </div>
+        </div>
+        <aside class="coach-col">
+          <div class="card coach-card">
+            <div class="coach-status" id="coachStatus">White to move</div>
+            <div class="feedback" id="feedbackBox"></div>
+            <h2>Coach says</h2>
+            <div id="coachExplain">
+              <p class="coach-headline">Loading analysis&hellip;</p>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Threats on the board</h3>
+            <ul class="threats-list" id="threatsList"></ul>
+          </div>
+          <div class="card">
+            <h3>Moves</h3>
+            <ol class="scoresheet" id="moveList"></ol>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- LEARN -->
+    <section id="tab-learn" hidden>
+      <div class="learn-grid" id="learnGrid"></div>
+    </section>
+
+    <!-- STRATEGY -->
+    <section id="tab-strategy" hidden>
+      <div class="learn-grid" id="strategyGrid"></div>
+    </section>
+
+    <!-- LESSONS -->
+    <section id="tab-lessons" hidden>
+      <div class="puzzle-grid">
+        <div>
+          <h2 style="margin-bottom:4px;">Watch-and-learn lessons</h2>
+          <p style="margin:0 0 14px; font-size:.85rem; color:var(--ink-dim);">Press play and watch each position unfold, move by move, with commentary.</p>
+          <div class="puzzle-list" id="lessonList"></div>
+        </div>
+        <div>
+          <div class="board-shell">
+            <div class="board-frame">
+              <div class="board" id="lessonBoard"></div>
+            </div>
+            <div class="lesson-progress">
+              <div class="lesson-progress-track"><div class="lesson-progress-fill" id="lessonProgressFill"></div></div>
+              <span class="lesson-progress-label" id="lessonProgressLabel">Step 1 of 1</span>
+            </div>
+            <p class="lesson-caption" id="lessonCaption">Choose a lesson to begin.</p>
+            <div class="lesson-takeaway" id="lessonTakeaway" hidden></div>
+            <div class="lesson-controls">
+              <button class="btn" id="lessonRestart" title="Restart">⟲</button>
+              <button class="btn" id="lessonPrev" title="Previous step">◀</button>
+              <button class="btn btn-primary" id="lessonPlayPause">Play</button>
+              <button class="btn" id="lessonNext" title="Next step">▶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PUZZLES -->
+    <section id="tab-puzzles" hidden>
+      <div class="puzzle-grid">
+        <div>
+          <h2 style="margin-bottom:10px;">Tactics puzzles</h2>
+          <div class="puzzle-list" id="puzzleList"></div>
+        </div>
+        <div>
+          <div class="board-shell">
+            <p id="puzzleIntro" style="margin:0 0 10px; font-size:.9rem; color:var(--ink-dim);"></p>
+            <div class="board-frame">
+              <div class="board" id="puzzleBoard"></div>
+            </div>
+            <div class="puzzle-feedback" id="puzzleFeedback"></div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <button class="btn" id="puzzleRetry">Retry</button>
+              <button class="btn" id="puzzleSolution">Show solution</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* =========================================================================
+   CHESS ENGINE — board representation, legal move generation, make/unmake,
+   check/checkmate/stalemate detection, evaluation, alpha-beta search.
+   ========================================================================= */
+var Chess = (function () {
+  const FILES = 'abcdefgh';
+  function sq(file, rank) { return rank * 8 + file; }
+  function fileOf(s) { return s % 8; }
+  function rankOf(s) { return Math.floor(s / 8); }
+  function sqName(s) { return FILES[fileOf(s)] + (rankOf(s) + 1); }
+  function nameToSq(n) { return sq(FILES.indexOf(n[0]), parseInt(n[1], 10) - 1); }
+  function isWhite(p) { return p && p === p.toUpperCase(); }
+  function isBlack(p) { return p && p === p.toLowerCase(); }
+
+  const KNIGHT_DELTAS = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+  const KING_DELTAS = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+  const BISHOP_DIRS = [[1,1],[1,-1],[-1,1],[-1,-1]];
+  const ROOK_DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+
+  function initialBoard() {
+    const b = new Array(64).fill(null);
+    const back = ['R','N','B','Q','K','B','N','R'];
+    for (let f = 0; f < 8; f++) {
+      b[sq(f,0)] = back[f]; b[sq(f,1)] = 'P';
+      b[sq(f,6)] = 'p'; b[sq(f,7)] = back[f].toLowerCase();
+    }
+    return b;
+  }
+  function newGame() {
+    return { board: initialBoard(), turn:'w', castling:{K:true,Q:true,k:true,q:true}, ep:null, halfmove:0, fullmove:1 };
+  }
+  function cloneState(s) {
+    return { board:s.board.slice(), turn:s.turn, castling:Object.assign({},s.castling), ep:s.ep, halfmove:s.halfmove, fullmove:s.fullmove };
+  }
+  function findKing(board,color){ const k=color==='w'?'K':'k'; for(let i=0;i<64;i++) if(board[i]===k) return i; return -1; }
+
+  function isAttacked(board, s, byColor) {
+    const f0=fileOf(s), r0=rankOf(s);
+    const pawn = byColor==='w' ? 'P':'p';
+    const dir = byColor==='w' ? -1 : 1;
+    for (const df of [-1,1]) { const f=f0+df, r=r0+dir; if(f>=0&&f<8&&r>=0&&r<8&&board[sq(f,r)]===pawn) return true; }
+    const knight = byColor==='w' ? 'N':'n';
+    for (const [df,dr] of KNIGHT_DELTAS){ const f=f0+df,r=r0+dr; if(f>=0&&f<8&&r>=0&&r<8&&board[sq(f,r)]===knight) return true; }
+    const king = byColor==='w' ? 'K':'k';
+    for (const [df,dr] of KING_DELTAS){ const f=f0+df,r=r0+dr; if(f>=0&&f<8&&r>=0&&r<8&&board[sq(f,r)]===king) return true; }
+    const bishopLike = byColor==='w' ? ['B','Q'] : ['b','q'];
+    for (const [df,dr] of BISHOP_DIRS){ let f=f0+df,r=r0+dr; while(f>=0&&f<8&&r>=0&&r<8){ const p=board[sq(f,r)]; if(p){ if(bishopLike.includes(p)) return true; break; } f+=df; r+=dr; } }
+    const rookLike = byColor==='w' ? ['R','Q'] : ['r','q'];
+    for (const [df,dr] of ROOK_DIRS){ let f=f0+df,r=r0+dr; while(f>=0&&f<8&&r>=0&&r<8){ const p=board[sq(f,r)]; if(p){ if(rookLike.includes(p)) return true; break; } f+=df; r+=dr; } }
+    return false;
+  }
+  function inCheck(state,color){ const k=findKing(state.board,color); if(k<0) return false; return isAttacked(state.board,k,color==='w'?'b':'w'); }
+
+  function genPseudoMoves(state) {
+    const { board, turn } = state;
+    const moves = [];
+    const own = turn==='w' ? isWhite : isBlack;
+    const opp = turn==='w' ? isBlack : isWhite;
+    for (let s=0;s<64;s++) {
+      const p = board[s]; if (!p || !own(p)) continue;
+      const f0=fileOf(s), r0=rankOf(s), upper=p.toUpperCase();
+      if (upper==='P') {
+        const dir = turn==='w'?1:-1;
+        const startRank = turn==='w'?1:6;
+        const promoRank = turn==='w'?7:0;
+        const r1=r0+dir;
+        if (r1>=0&&r1<8&&!board[sq(f0,r1)]) {
+          if (r1===promoRank) for (const pr of ['Q','R','B','N']) moves.push({from:s,to:sq(f0,r1),piece:p,captured:null,promotion: turn==='w'?pr:pr.toLowerCase()});
+          else { moves.push({from:s,to:sq(f0,r1),piece:p,captured:null,promotion:null});
+            if (r0===startRank) { const r2=r0+2*dir; if(!board[sq(f0,r2)]) moves.push({from:s,to:sq(f0,r2),piece:p,captured:null,promotion:null,isDouble:true}); } }
+        }
+        for (const df of [-1,1]) {
+          const f=f0+df; if(f<0||f>=8||r1<0||r1>=8) continue;
+          const t=sq(f,r1);
+          if (board[t] && opp(board[t])) {
+            if (r1===promoRank) for (const pr of ['Q','R','B','N']) moves.push({from:s,to:t,piece:p,captured:board[t],promotion: turn==='w'?pr:pr.toLowerCase()});
+            else moves.push({from:s,to:t,piece:p,captured:board[t],promotion:null});
+          } else if (state.ep===t) moves.push({from:s,to:t,piece:p,captured:(turn==='w'?'p':'P'),promotion:null,isEp:true});
+        }
+      } else if (upper==='N') {
+        for (const [df,dr] of KNIGHT_DELTAS) { const f=f0+df,r=r0+dr; if(f<0||f>=8||r<0||r>=8) continue; const t=sq(f,r);
+          if (!board[t]||opp(board[t])) moves.push({from:s,to:t,piece:p,captured:board[t]||null,promotion:null}); }
+      } else if (upper==='K') {
+        for (const [df,dr] of KING_DELTAS) { const f=f0+df,r=r0+dr; if(f<0||f>=8||r<0||r>=8) continue; const t=sq(f,r);
+          if (!board[t]||opp(board[t])) moves.push({from:s,to:t,piece:p,captured:board[t]||null,promotion:null}); }
+        const oppColor = turn==='w'?'b':'w';
+        if (turn==='w' && s===sq(4,0)) {
+          if (state.castling.K && !board[sq(5,0)] && !board[sq(6,0)] && board[sq(7,0)]==='R' &&
+              !isAttacked(board,sq(4,0),oppColor) && !isAttacked(board,sq(5,0),oppColor) && !isAttacked(board,sq(6,0),oppColor))
+            moves.push({from:s,to:sq(6,0),piece:p,captured:null,promotion:null,isCastle:'K'});
+          if (state.castling.Q && !board[sq(3,0)] && !board[sq(2,0)] && !board[sq(1,0)] && board[sq(0,0)]==='R' &&
+              !isAttacked(board,sq(4,0),oppColor) && !isAttacked(board,sq(3,0),oppColor) && !isAttacked(board,sq(2,0),oppColor))
+            moves.push({from:s,to:sq(2,0),piece:p,captured:null,promotion:null,isCastle:'Q'});
+        }
+        if (turn==='b' && s===sq(4,7)) {
+          if (state.castling.k && !board[sq(5,7)] && !board[sq(6,7)] && board[sq(7,7)]==='r' &&
+              !isAttacked(board,sq(4,7),oppColor) && !isAttacked(board,sq(5,7),oppColor) && !isAttacked(board,sq(6,7),oppColor))
+            moves.push({from:s,to:sq(6,7),piece:p,captured:null,promotion:null,isCastle:'K'});
+          if (state.castling.q && !board[sq(3,7)] && !board[sq(2,7)] && !board[sq(1,7)] && board[sq(0,7)]==='r' &&
+              !isAttacked(board,sq(4,7),oppColor) && !isAttacked(board,sq(3,7),oppColor) && !isAttacked(board,sq(2,7),oppColor))
+            moves.push({from:s,to:sq(2,7),piece:p,captured:null,promotion:null,isCastle:'Q'});
+        }
+      } else {
+        const dirs = upper==='B'?BISHOP_DIRS:upper==='R'?ROOK_DIRS:BISHOP_DIRS.concat(ROOK_DIRS);
+        for (const [df,dr] of dirs) { let f=f0+df,r=r0+dr;
+          while (f>=0&&f<8&&r>=0&&r<8) { const t=sq(f,r);
+            if (!board[t]) moves.push({from:s,to:t,piece:p,captured:null,promotion:null});
+            else { if (opp(board[t])) moves.push({from:s,to:t,piece:p,captured:board[t],promotion:null}); break; }
+            f+=df; r+=dr; } }
+      }
+    }
+    return moves;
+  }
+
+  function applyMove(state, move) {
+    const ns = cloneState(state); const b = ns.board;
+    const piece = move.piece; const color = isWhite(piece)?'w':'b';
+    b[move.from] = null;
+    if (move.isEp) { const capSq = sq(fileOf(move.to), rankOf(move.from)); b[capSq] = null; }
+    b[move.to] = move.promotion || piece;
+    if (move.isCastle==='K') { const rank = color==='w'?0:7; b[sq(5,rank)]=b[sq(7,rank)]; b[sq(7,rank)]=null; }
+    else if (move.isCastle==='Q') { const rank = color==='w'?0:7; b[sq(3,rank)]=b[sq(0,rank)]; b[sq(0,rank)]=null; }
+    if (piece==='K'){ ns.castling.K=false; ns.castling.Q=false; }
+    if (piece==='k'){ ns.castling.k=false; ns.castling.q=false; }
+    if (move.from===sq(0,0)||move.to===sq(0,0)) ns.castling.Q=false;
+    if (move.from===sq(7,0)||move.to===sq(7,0)) ns.castling.K=false;
+    if (move.from===sq(0,7)||move.to===sq(0,7)) ns.castling.q=false;
+    if (move.from===sq(7,7)||move.to===sq(7,7)) ns.castling.k=false;
+    ns.ep = move.isDouble ? sq(fileOf(move.from), (rankOf(move.from)+rankOf(move.to))/2) : null;
+    if (piece.toUpperCase()==='P' || move.captured) ns.halfmove=0; else ns.halfmove++;
+    if (color==='b') ns.fullmove++;
+    ns.turn = color==='w'?'b':'w';
+    return ns;
+  }
+
+  function genLegalMoves(state) {
+    const pseudo = genPseudoMoves(state); const legal=[];
+    for (const m of pseudo) { const ns = applyMove(state,m); if (!inCheck(ns,state.turn)) legal.push(m); }
+    return legal;
+  }
+
+  function gameStatus(state) {
+    const legal = genLegalMoves(state);
+    const check = inCheck(state, state.turn);
+    if (legal.length===0) return check ? {over:true,result:state.turn==='w'?'0-1':'1-0',reason:'checkmate'} : {over:true,result:'1/2-1/2',reason:'stalemate'};
+    if (state.halfmove>=100) return {over:true,result:'1/2-1/2',reason:'fifty-move rule'};
+    const pieces = state.board.filter(Boolean);
+    if (pieces.length<=4) {
+      const minor = pieces.filter(p=>p.toUpperCase()!=='K');
+      const kinds = minor.map(p=>p.toUpperCase());
+      const onlyMinors = kinds.every(k=>k==='N'||k==='B');
+      if (minor.length===0) return {over:true,result:'1/2-1/2',reason:'insufficient material'};
+      if (minor.length===1 && onlyMinors) return {over:true,result:'1/2-1/2',reason:'insufficient material'};
+    }
+    return {over:false, check, legalCount:legal.length};
+  }
+
+  function sanFor(state, move, legalMoves) {
+    const piece = move.piece.toUpperCase();
+    if (move.isCastle==='K') return sanSuffix(state,move,'O-O');
+    if (move.isCastle==='Q') return sanSuffix(state,move,'O-O-O');
+    let s=''; const capture = !!move.captured;
+    if (piece==='P') {
+      if (capture) s += FILES[fileOf(move.from)] + 'x';
+      s += sqName(move.to);
+      if (move.promotion) s += '=' + move.promotion.toUpperCase();
+    } else {
+      s += piece;
+      const others = legalMoves.filter(m => !(m.from===move.from && m.to===move.to && m.promotion===move.promotion) && m.piece===move.piece && m.to===move.to);
+      if (others.length) {
+        const sameFile = others.some(m=>fileOf(m.from)===fileOf(move.from));
+        const sameRank = others.some(m=>rankOf(m.from)===rankOf(move.from));
+        if (!sameFile) s += FILES[fileOf(move.from)];
+        else if (!sameRank) s += (rankOf(move.from)+1);
+        else s += sqName(move.from);
+      }
+      if (capture) s += 'x';
+      s += sqName(move.to);
+    }
+    return sanSuffix(state, move, s);
+  }
+  function sanSuffix(state, move, base) {
+    const ns = applyMove(state, move); const opp = ns.turn;
+    const check = inCheck(ns, opp);
+    if (check) { const legal = genLegalMoves(ns); base += legal.length===0 ? '#' : '+'; }
+    return base;
+  }
+
+  const PIECE_VALUES = { P:100, N:320, B:330, R:500, Q:900, K:0 };
+  const PST = {
+    P:[0,0,0,0,0,0,0,0, 5,10,10,-10,-10,10,10,5, 5,-5,-10,0,0,-10,-5,5, 0,0,0,20,20,0,0,0,
+       5,5,10,25,25,10,5,5, 10,10,20,30,30,20,10,10, 50,50,50,50,50,50,50,50, 0,0,0,0,0,0,0,0],
+    N:[-50,-40,-30,-30,-30,-30,-40,-50, -40,-20,0,5,5,0,-20,-40, -30,5,10,15,15,10,5,-30, -30,0,15,20,20,15,0,-30,
+       -30,5,15,20,20,15,5,-30, -30,0,10,15,15,10,0,-30, -40,-20,0,0,0,0,-20,-40, -50,-40,-30,-30,-30,-30,-40,-50],
+    B:[-20,-10,-10,-10,-10,-10,-10,-20, -10,5,0,0,0,0,5,-10, -10,10,10,10,10,10,10,-10, -10,0,10,10,10,10,0,-10,
+       -10,5,5,10,10,5,5,-10, -10,0,5,10,10,5,0,-10, -10,0,0,0,0,0,0,-10, -20,-10,-10,-10,-10,-10,-10,-20],
+    R:[0,0,0,5,5,0,0,0, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5,
+       -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, 5,10,10,10,10,10,10,5, 0,0,0,0,0,0,0,0],
+    Q:[-20,-10,-10,-5,-5,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,5,5,5,0,-10, -5,0,5,5,5,5,0,-5,
+       0,0,5,5,5,5,0,-5, -10,5,5,5,5,5,0,-10, -10,0,5,0,0,0,0,-10, -20,-10,-10,-5,-5,-10,-10,-20],
+    K:[20,30,10,0,0,10,30,20, 20,20,0,0,0,0,20,20, -10,-20,-20,-20,-20,-20,-20,-10, -20,-30,-30,-40,-40,-30,-30,-20,
+       -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30],
+  };
+  function pstValue(piece, s) { const upper=piece.toUpperCase(); const table=PST[upper]; const idx = isWhite(piece)?s:sq(fileOf(s),7-rankOf(s)); const v=table[idx]; return isWhite(piece)?v:-v; }
+  function evaluate(state) { let score=0; for (let s=0;s<64;s++){ const p=state.board[s]; if(!p) continue; score += isWhite(p)?PIECE_VALUES[p.toUpperCase()]:-PIECE_VALUES[p.toUpperCase()]; score += pstValue(p,s); } return score; }
+  function orderMoves(moves) { return moves.slice().sort((a,b)=>{ const av=a.captured?PIECE_VALUES[a.captured.toUpperCase()]-PIECE_VALUES[a.piece.toUpperCase()]/10:0; const bv=b.captured?PIECE_VALUES[b.captured.toUpperCase()]-PIECE_VALUES[b.piece.toUpperCase()]/10:0; return bv-av; }); }
+
+  function alphaBeta(state, depth, alpha, beta, maximizing) {
+    const status = gameStatus(state);
+    if (status.over) { if (status.reason==='checkmate') return maximizing ? -100000-depth : 100000+depth; return 0; }
+    if (depth===0) return quiesce(state, alpha, beta, maximizing);
+    const moves = orderMoves(genLegalMoves(state));
+    if (maximizing) { let best=-Infinity; for (const m of moves){ const ns=applyMove(state,m); const v=alphaBeta(ns,depth-1,alpha,beta,false); if(v>best) best=v; if(best>alpha) alpha=best; if(alpha>=beta) break; } return best; }
+    else { let best=Infinity; for (const m of moves){ const ns=applyMove(state,m); const v=alphaBeta(ns,depth-1,alpha,beta,true); if(v<best) best=v; if(best<beta) beta=best; if(alpha>=beta) break; } return best; }
+  }
+  function quiesce(state, alpha, beta, maximizing) {
+    const standPat = evaluate(state);
+    if (maximizing) { if (standPat>=beta) return beta; if (standPat>alpha) alpha=standPat; }
+    else { if (standPat<=alpha) return alpha; if (standPat<beta) beta=standPat; }
+    const moves = orderMoves(genLegalMoves(state)).filter(m=>m.captured);
+    for (const m of moves) { const ns=applyMove(state,m); const v=quiesce(ns,alpha,beta,!maximizing);
+      if (maximizing) { if (v>alpha) alpha=v; if (alpha>=beta) return beta; } else { if (v<beta) beta=v; if (alpha>=beta) return alpha; } }
+    return maximizing ? alpha : beta;
+  }
+  function searchBest(state, depth) {
+    const moves = orderMoves(genLegalMoves(state)); const maximizing = state.turn==='w';
+    const ranked = []; let alpha=-Infinity, beta=Infinity;
+    for (const m of moves) { const ns=applyMove(state,m); const v=alphaBeta(ns,depth-1,alpha,beta,!maximizing); ranked.push({move:m,score:v}); if (maximizing){ if(v>alpha) alpha=v; } else { if(v<beta) beta=v; } }
+    ranked.sort((a,b)=> maximizing ? b.score-a.score : a.score-b.score);
+    return { move: ranked[0]?ranked[0].move:null, score: ranked[0]?ranked[0].score:0, ranked };
+  }
+  function fenToState(fen) {
+    const parts = fen.trim().split(/\s+/);
+    const [placement, turn, castling, ep, halfmove, fullmove] = parts;
+    const board = new Array(64).fill(null);
+    const rows = placement.split('/');
+    for (let i=0;i<8;i++) { const rank=7-i; let file=0;
+      for (const ch of rows[i]) { if (/\d/.test(ch)) file += parseInt(ch,10); else { board[sq(file,rank)] = ch; file++; } } }
+    return { board, turn: turn==='b'?'b':'w',
+      castling:{K:castling.includes('K'),Q:castling.includes('Q'),k:castling.includes('k'),q:castling.includes('q')},
+      ep: ep && ep!=='-' ? nameToSq(ep) : null, halfmove: parseInt(halfmove||'0',10)||0, fullmove: parseInt(fullmove||'1',10)||1 };
+  }
+
+  return { sq, fileOf, rankOf, sqName, nameToSq, isWhite, isBlack, newGame, cloneState, findKing, isAttacked, inCheck,
+    genPseudoMoves, genLegalMoves, applyMove, gameStatus, sanFor, evaluate, searchBest, fenToState, PIECE_VALUES };
+})();
+
+/* =========================================================================
+   COACH — threat detection, tactic spotting, plain-English explanations.
+   ========================================================================= */
+var Coach = (function (Chess) {
+  const { sq, fileOf, rankOf, sqName, isWhite, isBlack, inCheck, genLegalMoves, applyMove, gameStatus, sanFor, searchBest, PIECE_VALUES } = Chess;
+  const PIECE_NAMES = { P:'pawn', N:'knight', B:'bishop', R:'rook', Q:'queen', K:'king' };
+  function pname(p){ return PIECE_NAMES[p.toUpperCase()]; }
+  const CENTER = [sq(3,3), sq(4,3), sq(3,4), sq(4,4)];
+
+  function attacksSquare(board, fromSq, targetSq) {
+    const p = board[fromSq]; if (!p) return false;
+    const f0=fileOf(fromSq), r0=rankOf(fromSq), f1=fileOf(targetSq), r1=rankOf(targetSq);
+    const df=f1-f0, dr=r1-r0, upper=p.toUpperCase();
+    if (upper==='P') { const dir = isWhite(p)?1:-1; return dr===dir && Math.abs(df)===1; }
+    if (upper==='N') return (Math.abs(df)===1&&Math.abs(dr)===2)||(Math.abs(df)===2&&Math.abs(dr)===1);
+    if (upper==='K') return Math.abs(df)<=1 && Math.abs(dr)<=1 && (df!==0||dr!==0);
+    const isDiag = Math.abs(df)===Math.abs(dr) && df!==0;
+    const isStraight = (df===0&&dr!==0)||(dr===0&&df!==0);
+    if (upper==='B' && !isDiag) return false;
+    if (upper==='R' && !isStraight) return false;
+    if (upper==='Q' && !isDiag && !isStraight) return false;
+    const stepF=Math.sign(df), stepR=Math.sign(dr); let f=f0+stepF, r=r0+stepR;
+    while (f!==f1||r!==r1) { if (board[sq(f,r)]) return false; f+=stepF; r+=stepR; }
+    return true;
+  }
+  function attackersOf(board, targetSq, byColor) {
+    const res=[]; for (let s=0;s<64;s++) { const p=board[s]; if(!p) continue; if (byColor==='w'?!isWhite(p):!isBlack(p)) continue; if (attacksSquare(board,s,targetSq)) res.push(s); } return res;
+  }
+  function hangingPieces(state, color) {
+    const board = state.board; const opp = color==='w'?'b':'w'; const hanging=[];
+    for (let s=0;s<64;s++) { const p=board[s]; if(!p) continue; if (color==='w'?!isWhite(p):!isBlack(p)) continue;
+      const attackers = attackersOf(board,s,opp); if (!attackers.length) continue;
+      const defenders = attackersOf(board,s,color); const pieceVal = PIECE_VALUES[p.toUpperCase()];
+      const cheapestAttacker = Math.min(...attackers.map(a=>PIECE_VALUES[board[a].toUpperCase()]));
+      if (defenders.length===0 || cheapestAttacker<pieceVal) hanging.push({sq:s, piece:p, attackers, defenders, loss: defenders.length===0?pieceVal:pieceVal-cheapestAttacker});
+    }
+    return hanging.sort((a,b)=>b.loss-a.loss);
+  }
+  function detectFork(state, afterState, move) {
+    const board = afterState.board; const opp = afterState.turn; const targets=[];
+    for (let s=0;s<64;s++) { const p=board[s]; if(!p) continue; if (opp==='w'?!isWhite(p):!isBlack(p)) continue; if (s===move.to) continue;
+      if (PIECE_VALUES[p.toUpperCase()]<300 && p.toUpperCase()!=='K') continue;
+      if (attacksSquare(board, move.to, s)) targets.push({sq:s, piece:p}); }
+    return targets.length>=2 ? targets : null;
+  }
+  function findPins(state, color) {
+    const board = state.board; const kingSq = Chess.findKing(board, color); if (kingSq<0) return [];
+    const pins=[]; const dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    for (const [df,dr] of dirs) { let f=fileOf(kingSq)+df, r=rankOf(kingSq)+dr; let blocker=null;
+      while (f>=0&&f<8&&r>=0&&r<8) { const s=sq(f,r); const p=board[s];
+        if (p) { if (color==='w'?isWhite(p):isBlack(p)) { if(!blocker) blocker=s; else break; }
+          else { if (blocker) { const isDiag=df!==0&&dr!==0; const upper=p.toUpperCase(); const slidesThis = isDiag ? (upper==='B'||upper==='Q') : (upper==='R'||upper==='Q'); if (slidesThis) pins.push({pinned:blocker, by:s, king:kingSq}); } break; } }
+        f+=df; r+=dr; } }
+    return pins;
+  }
+  function explainMove(state, move) {
+    const legal = genLegalMoves(state); const san = sanFor(state, move, legal);
+    const after = applyMove(state, move); const mover = state.turn; const reasons=[]; let headline=null;
+    const wasHangingBefore = hangingPieces(state, mover).some(h=>h.sq===move.from);
+    const givesCheck = inCheck(after, after.turn);
+    const status = gameStatus(after);
+    const fork = detectFork(state, after, move);
+    const pinsAfter = findPins(after, after.turn);
+    const newPin = pinsAfter.find(p=>p.by===move.to);
+    const capturedVal = move.captured ? PIECE_VALUES[move.captured.toUpperCase()] : 0;
+    const opponentHangingAfter = hangingPieces(after, after.turn);
+    const stillHangingSelf = hangingPieces(after, mover);
+
+    if (status.over && status.reason==='checkmate') return { san, headline: san + ' is checkmate — the game ends immediately.', reasons: ['The ' + pname(move.piece) + ' delivers a check the king cannot escape, block, or capture out of.'] };
+
+    if (move.captured && capturedVal>=300) headline = san + ' wins the ' + pname(move.captured) + (move.isEp?' en passant':'') + '.';
+    else if (wasHangingBefore) headline = san + ' rescues the ' + pname(move.piece) + ', which was under attack.';
+    else if (fork) headline = san + ' forks the ' + fork.map(t=>pname(t.piece)).join(' and ') + ' — one piece now attacks two targets at once.';
+    else if (newPin) headline = san + ' pins the enemy ' + pname(after.board[newPin.pinned]) + ' against its king.';
+    else if (givesCheck) headline = san + ' gives check, forcing the opponent to react immediately.';
+    else if (move.isCastle) headline = san + ' castles the king to safety and connects the rooks.';
+    else if (move.captured) headline = san + ' trades off a ' + pname(move.captured) + '.';
+    else headline = san + ' is the strongest move here.';
+
+    if (move.captured && capturedVal>=300 && !headline.startsWith(san+' wins')) reasons.push('It also wins material by capturing the ' + pname(move.captured) + '.');
+    if (fork && !headline.includes('forks')) reasons.push('It also creates a fork, attacking ' + fork.map(t=>pname(t.piece)).join(' and ') + ' simultaneously.');
+    if (opponentHangingAfter.length && !move.captured) { const top=opponentHangingAfter[0]; reasons.push("After this, the opponent's " + pname(top.piece) + ' on ' + sqName(top.sq) + ' is left hanging.'); }
+    if (CENTER.includes(move.to) && move.piece.toUpperCase()!=='K') reasons.push('It takes a stake in the center, one of the most valuable areas of the board.');
+    const isBackRankStart = mover==='w' ? rankOf(move.from)===0 : rankOf(move.from)===7;
+    if (isBackRankStart && ['N','B'].includes(move.piece.toUpperCase())) reasons.push('It develops a piece off the back rank so it can join the game.');
+    if (move.isCastle && !headline.includes('castle')) reasons.push('Castling also tucks the king away from the center.');
+    if (stillHangingSelf.some(h=>h.sq===move.to) && !move.captured) reasons.push('Note: the piece lands on a contested square, so watch for a tactical follow-up.');
+    if (givesCheck && !headline.includes('check')) reasons.push('It also comes with check.');
+    if (!reasons.length) reasons.push('It improves piece activity and keeps the position flexible without creating weaknesses.');
+    return { san, headline, reasons, fork, givesCheck, capturedVal };
+  }
+  function classifyPlayedMove(state, playedMove, depth) {
+    const { ranked } = searchBest(state, depth); const maximizing = state.turn==='w'; const best = ranked[0];
+    const played = ranked.find(r=>r.move.from===playedMove.from && r.move.to===playedMove.to && r.move.promotion===playedMove.promotion);
+    if (!best || !played) return { label:'Played', lossCp:0 };
+    const lossCp = maximizing ? (best.score-played.score) : (played.score-best.score);
+    let label = 'Best move';
+    if (lossCp>500) label='Blunder'; else if (lossCp>250) label='Mistake'; else if (lossCp>100) label='Inaccuracy'; else if (lossCp>20) label='Good move'; else label='Best move';
+    return { label, lossCp: Math.max(0, Math.round(lossCp)), bestSan: sanFor(state, best.move, genLegalMoves(state)) };
+  }
+  function evalToWhitePct(cp) { const c = Math.max(-1000, Math.min(1000, cp)); return 1/(1+Math.pow(10, -c/400)); }
+  return { attackersOf, hangingPieces, detectFork, findPins, explainMove, classifyPlayedMove, evalToWhitePct, pname };
+})(Chess);
+
+/* =========================================================================
+   CAPTURE LOGIC — screen-capture move detection. No piece recognition is
+   attempted; instead two frames (before/after the opponent's move) are
+   diffed cell-by-cell, and the set of changed squares is matched against
+   the engine's own legal-move list to identify exactly which move was
+   played. Verified offline against castling, en passant, promotion and
+   plain captures (see test-capture-logic.js).
+   ========================================================================= */
+var CaptureLogic = (function (Chess) {
+  function squareForCell(r, c, flipped) {
+    let fileIndex, rankIndex;
+    if (!flipped) { fileIndex = c; rankIndex = 7 - r; } else { fileIndex = 7 - c; rankIndex = r; }
+    return Chess.sq(fileIndex, rankIndex);
+  }
+  function colorDist(a, b) { const dr=a[0]-b[0], dg=a[1]-b[1], db=a[2]-b[2]; return Math.sqrt(dr*dr+dg*dg+db*db); }
+  function diffCells(cellsA, cellsB, flipped) {
+    const out = [];
+    for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+      const idx=r*8+c, a=cellsA[idx], b=cellsB[idx];
+      const score = colorDist(a.avg,b.avg) + Math.abs(a.variance-b.variance)*0.6;
+      out.push({ r, c, sq: squareForCell(r,c,flipped), score });
+    }
+    return out.sort((x,y)=>y.score-x.score);
+  }
+  function pickChangedSquares(scored, opts) {
+    opts = opts||{}; const minScore = opts.minScore!=null?opts.minScore:22; const maxCells = opts.maxCells||4;
+    const picked = [];
+    for (const s of scored) { if (s.score<minScore) break; picked.push(s.sq); if (picked.length>=maxCells) break; }
+    return picked;
+  }
+  function matchMoves(state, changedSquares) {
+    const legal = Chess.genLegalMoves(state);
+    const changedSet = new Set(changedSquares);
+    const candidates = legal.filter(m => {
+      const required = [m.from, m.to];
+      if (m.isCastle) { const rank = Chess.rankOf(m.from);
+        required.push(m.isCastle==='K'?Chess.sq(7,rank):Chess.sq(0,rank));
+        required.push(m.isCastle==='K'?Chess.sq(5,rank):Chess.sq(3,rank)); }
+      if (m.isEp) required.push(Chess.sq(Chess.fileOf(m.to), Chess.rankOf(m.from)));
+      if (required.length !== changedSet.size) return false;
+      return required.every(sq => changedSet.has(sq));
+    });
+    const groups = new Map();
+    for (const m of candidates) { const key=m.from+'-'+m.to; if (!groups.has(key)) groups.set(key,[]); groups.get(key).push(m); }
+    return Array.from(groups.values());
+  }
+  function detectMove(state, scored) {
+    const top2 = scored.slice(0, 2).map(s => s.sq);
+    if (new Set(top2).size === 2) {
+      const groups = matchMoves(state, top2);
+      if (groups.length === 1) return { groups, squares: top2, tier: 1 };
+    }
+    const changed = pickChangedSquares(scored, {});
+    const groups = matchMoves(state, changed);
+    if (groups.length >= 1) return { groups, squares: changed, tier: 2 };
+    return { groups: [], squares: changed, tier: 0 };
+  }
+  // ---- Resync: catch up when more than one move has happened since the last
+  // check. A frame diff can only ever explain ONE move's worth of change; if
+  // several piled up, classify each of the 64 cells as occupied/empty (no
+  // diff needed — just "is there a piece here right now") and search forward
+  // through this app's own legal moves for a short sequence whose resulting
+  // occupancy matches what's on screen right now.
+  function otsuThreshold(values) {
+    const min = Math.min(...values), max = Math.max(...values);
+    if (max - min < 1e-6) return min;
+    const bins = 64;
+    const hist = new Array(bins).fill(0);
+    for (const v of values) {
+      let idx = Math.floor(((v - min) / (max - min)) * (bins - 1));
+      idx = Math.max(0, Math.min(bins - 1, idx));
+      hist[idx]++;
+    }
+    const total = values.length;
+    let sumAll = 0; for (let i = 0; i < bins; i++) sumAll += i * hist[i];
+    let sumB = 0, wB = 0, best = -1, bestLo = 0, bestHi = 0;
+    for (let i = 0; i < bins; i++) {
+      wB += hist[i]; if (wB === 0) continue;
+      const wF = total - wB; if (wF === 0) break;
+      sumB += i * hist[i];
+      const mB = sumB / wB, mF = (sumAll - sumB) / wF;
+      const between = wB * wF * (mB - mF) * (mB - mF);
+      // A gap with no samples ties every bin inside it for the best value;
+      // landing on the first tie sits the threshold at the edge of the lower
+      // cluster instead of between the two, so track the whole tied run and
+      // use its midpoint.
+      if (between > best + 1e-9) { best = between; bestLo = i; bestHi = i; }
+      else if (between > best - 1e-9) { bestHi = i; }
+    }
+    const bestIdx = (bestLo + bestHi) / 2;
+    return min + (bestIdx / (bins - 1)) * (max - min);
+  }
+  function classifyOccupancy(cells) {
+    const variances = cells.map(c => c.variance);
+    const n = variances.length;
+    const sortedIdx = variances.map((v, i) => i).sort((a, b) => variances[a] - variances[b]);
+    const sorted = sortedIdx.map(i => variances[i]);
+    // A chess position can never have more than 32 pieces on the board (16
+    // per side, captures only remove them), so at least half of the 64
+    // squares are always empty. The true empty/occupied split can therefore
+    // never fall below the midpoint of the sorted variances — restricting
+    // the search for the split point to at-or-above that midpoint avoids a
+    // failure mode plain global Otsu is prone to on real board skins: piece
+    // variance itself is far from uniform (a queen's ornate silhouette
+    // produces much more internal contrast than a pawn's simple one).
+    //
+    // Even restricted to that half, picking the largest ABSOLUTE gap can
+    // still land inside the occupied cluster rather than at its boundary
+    // with the empty cluster: real captures showed cases where two
+    // similarly-bulky occupied pieces (e.g. two rooks) differ by a larger
+    // raw amount than the gap between the emptiest occupied square and the
+    // fullest empty one, even though the latter is proportionally much
+    // bigger. Comparing gaps in LOG space (equivalent to comparing ratios
+    // rather than differences) fixes this: going from "empty" (variance in
+    // the tens) to "occupied" (in the thousands) is a jump of several
+    // hundred percent, far larger in ratio terms than the spread between
+    // any two occupied pieces (rarely more than 2-3x each other), so the
+    // true boundary reliably has the largest log-gap even when it doesn't
+    // have the largest raw one.
+    const searchStart = Math.max(0, Math.floor(n / 2) - 1);
+    const logSorted = sorted.map(v => Math.log(Math.max(v, 1e-6)));
+    let bestGap = -1, bestSplit = searchStart;
+    for (let i = searchStart; i < n - 1; i++) {
+      const gap = logSorted[i + 1] - logSorted[i];
+      if (gap > bestGap) { bestGap = gap; bestSplit = i; }
+    }
+    const threshold = (sorted[bestSplit] + sorted[bestSplit + 1]) / 2;
+    return variances.map(v => v > threshold);
+  }
+  function occupancyOf(state, flipped) {
+    const occ = new Array(64);
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      occ[r*8+c] = !!state.board[squareForCell(r, c, flipped)];
+    }
+    return occ;
+  }
+  function hamming(a, b) { let d = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++; return d; }
+  // Sanity-check the "captured board is flipped" flag against what the frame
+  // actually shows, using color rather than occupancy (occupancy alone can't
+  // tell — the starting position looks the same rotated 180°, so an
+  // orientation mistake made at the very start of a game produces no
+  // diff/resync error at all until pieces move onto asymmetric squares, by
+  // which point tracking has already gone wrong). White pieces render
+  // lighter than Black's on every common board skin, so compare the average
+  // brightness of the occupied cells in the two back rows: whichever is
+  // lighter is White's home row, and that has to be the bottom row (r=7)
+  // when `flipped` is false, or the top row (r=0) when it's true.
+  function checkOrientation(cells, flipped) {
+    const occ = classifyOccupancy(cells);
+    function rowBrightness(r) {
+      let sum = 0, n = 0;
+      for (let c = 0; c < 8; c++) {
+        const idx = r * 8 + c;
+        if (!occ[idx]) continue;
+        const a = cells[idx].avg;
+        sum += 0.299 * a[0] + 0.587 * a[1] + 0.114 * a[2];
+        n++;
+      }
+      return n ? sum / n : null;
+    }
+    const topB = rowBrightness(0), bottomB = rowBrightness(7);
+    if (topB == null || bottomB == null) return { verdict: 'unknown' };
+    if (Math.abs(topB - bottomB) < 15) return { verdict: 'unknown', topB, bottomB };
+    const topIsLighter = topB > bottomB;
+    const expectedTopIsLighter = !!flipped;
+    return { verdict: topIsLighter === expectedTopIsLighter ? 'consistent' : 'mismatch', topB, bottomB };
+  }
+  // Iterative-deepening search over legal move sequences for the shortest one
+  // whose resulting occupancy matches (or best approximates) what's observed.
+  function resyncSearch(state, observedOccupancy, flipped, maxDepth, nodeBudget) {
+    maxDepth = maxDepth || 4;
+    nodeBudget = nodeBudget || 250000;
+    // Check the zero-move case FIRST: if the app's own position already
+    // matches what's on screen, nothing needs explaining. Skipping this and
+    // going straight to a depth-1..N search was a real bug — when nothing
+    // had actually changed since the last check, the search would still be
+    // forced to find SOME sequence, and with an even depth budget it could
+    // always find a harmless-looking round trip (a knight out and back, a
+    // rook shuffled over and back) that restores the exact same occupancy
+    // without being a real move at all. Worse, since the search is
+    // deterministic, re-running it against an unchanged board would keep
+    // finding and "applying" that same fake round trip over and over.
+    const occ0 = occupancyOf(state, flipped);
+    if (hamming(occ0, observedOccupancy) === 0) return { distance: 0, sequence: [], depth: 0 };
+    let nodes = 0;
+    let best = { distance: Infinity, sequence: null, depth: 0 };
+    for (let depth = 1; depth <= maxDepth; depth++) {
+      const found = searchDepth(state, [], depth);
+      if (found) return found;
+      if (nodes >= nodeBudget) break;
+    }
+    return best.sequence ? best : null;
+    function searchDepth(s, path, remaining) {
+      if (remaining === 0) {
+        nodes++;
+        const occ = occupancyOf(s, flipped);
+        const d = hamming(occ, observedOccupancy);
+        if (d < best.distance) best = { distance: d, sequence: path.slice(), depth: path.length };
+        if (d === 0) return best;
+        return null;
+      }
+      const legal = Chess.genLegalMoves(s);
+      for (const m of legal) {
+        if (nodes >= nodeBudget) return null;
+        const ns = Chess.applyMove(s, m);
+        path.push(m);
+        const result = searchDepth(ns, path, remaining - 1);
+        path.pop();
+        if (result) return result;
+      }
+      return null;
+    }
+  }
+  return { squareForCell, colorDist, diffCells, pickChangedSquares, matchMoves, detectMove,
+    otsuThreshold, classifyOccupancy, occupancyOf, hamming, resyncSearch, checkOrientation };
+})(Chess);
+
+/* =========================================================================
+   PUZZLES
+   ========================================================================= */
+var PUZZLES = [
+  { id:'p1', level:'Beginner', motif:'Back-rank mate', fen:'6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1', solution:['Ra8'],
+    intro:'White to move. The black king has no escape squares — find the mating move.' },
+  { id:'p2', level:'Beginner', motif:'Hanging piece', fen:'6k1/2b2ppp/8/R7/8/8/PP6/4K3 b - - 0 1', solution:['Bxa5'],
+    intro:'Black to move. White left a rook undefended on a5 — what can capture it?' },
+  { id:'p3', level:'Club', motif:'Knight fork', fen:'q3k3/8/8/1N6/8/8/8/6K1 w - - 0 1', solution:['Nc7'],
+    intro:'White to move. One knight move forks the king and the queen.' },
+  { id:'p4', level:'Club', motif:'Skewer', fen:'4r3/8/8/4k3/8/8/8/1Q4K1 w - - 0 1', solution:['Qe1'],
+    intro:'White to move. Line the king and rook up on the same file, then check — the king must move and the rook falls next.' },
+  { id:'p5', level:'Expert', motif:'Discovered attack', fen:'3r2k1/5ppp/8/8/8/1B6/5PPP/3R2K1 w - - 0 1', solution:['Rxd8'],
+    intro:'White to move. Simplify into a won endgame by removing the only defender.' },
+  { id:'p6', level:'Expert', motif:'Back-rank mate', fen:'6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1', solution:['Re8'],
+    intro:"White to move. The king is boxed in by its own pawns — deliver mate on the back rank." },
+];
+
+/* =========================================================================
+   LESSONS — narrated, auto-playing move-by-move walkthroughs. Verified
+   against the engine offline (each move resolves unambiguously and the
+   marked checkmates really are checkmate).
+   ========================================================================= */
+var LESSONS = [
+  { id:'l1', level:'Beginner', title:"Fool's Mate", minutes:1,
+    summary:'The fastest possible checkmate — and a lesson in why early pawn moves can wreck your king safety.',
+    steps: [
+      { caption: "This is the fastest checkmate in chess: just two moves each. Watch what happens when White weakens the king's cover for no reason." },
+      { move:'f3', caption: 'White pushes the f-pawn. It looks harmless, but it opens a diagonal straight to the king.' },
+      { move:'e5', caption: 'Black claims the center — a normal, healthy move.' },
+      { move:'g4', caption: "White pushes another pawn in front of the king. Now the e1–h4 diagonal is wide open, and there's no way back." },
+      { move:'Qh4', caption: "Checkmate. Black's queen slides down the diagonal White just opened. The king can't move, block, or capture — game over in four moves.", takeaway: "Never move both your f- and g-pawns early — they're your king's shield." },
+    ] },
+  { id:'l2', level:'Beginner', title:"Scholar's Mate", minutes:2,
+    summary:'The classic four-move trap beginners fall into again and again — and the one defensive move that stops it cold.',
+    steps: [
+      { caption: "This trap wins countless games between beginners. Watch how White quietly aims two pieces at one weak square: f7." },
+      { move:'e4', caption: 'White opens the center.' },
+      { move:'e5', caption: 'Black mirrors it — a fine, principled reply.' },
+      { move:'Bc4', caption: "The bishop eyes f7, the weakest square in Black's position (only the king defends it early on)." },
+      { move:'Nc6', caption: "Black develops a knight — natural, but doesn't yet see the danger." },
+      { move:'Qh5', caption: "The queen joins the attack on f7. Now two attackers are lined up against Black's weak point, and Black must find the only good defense." },
+      { move:'Nf6', caption: "This natural-looking developing move is the losing mistake — it ignores the threat completely instead of defending f7 (Qe7 or g6 was required)." },
+      { move:'Qxf7', caption: 'Checkmate! The queen captures on f7, protected by the bishop, with the king boxed in by its own pieces.', takeaway: "Whenever your opponent points two pieces at the same square, ask what they're attacking before you move." },
+    ] },
+  { id:'l3', level:'Beginner', title:'Opening Principles in Action', minutes:2,
+    summary:'A clean opening that follows the three golden rules: control the center, develop your pieces, and castle early.',
+    steps: [
+      { caption: "There's no trap here — just a model of good opening play. Watch for three things: center pawns, minor pieces coming out, and a quick castle." },
+      { move:'e4', caption: 'Rule 1: claim the center.' },
+      { move:'e5', caption: 'Black does the same.' },
+      { move:'Nf3', caption: 'Rule 2: develop knights before bishops. This knight also attacks the e5 pawn.' },
+      { move:'Nc6', caption: 'Black defends the pawn and develops at the same time — efficient.' },
+      { move:'Bc4', caption: 'The bishop develops to an active diagonal, aiming at f7.' },
+      { move:'Bc5', caption: 'Black mirrors the idea — this opening is called the Italian Game.' },
+      { move:'O-O', caption: 'Rule 3: castle early. The king tucks away to safety and the rook joins the game — all in six moves, with no weaknesses.', takeaway: 'Center, development, castle — in roughly that order — is the backbone of a sound opening.' },
+    ] },
+  { id:'l4', level:'Beginner', title:'The Back-Rank Mate Pattern', minutes:1,
+    summary:'The single most common mating pattern in amateur games — learn to spot it, deliver it, and defend against it.',
+    startFen:'6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1',
+    steps: [
+      { caption: "Black's king castled and never made a little breathing room (a move like ...h6). Its own pawns now block every escape square on the back rank." },
+      { move:'Ra8', caption: 'The rook simply marches down the open file to the back rank. The king has nowhere to go — every square is cut off by its own pawns or the board edge.', takeaway: 'Play a small "luft" move (h6 or g6) once your king is castled so this can never happen to you.' },
+    ] },
+];
+
+/* =========================================================================
+   UI
+   ========================================================================= */
+(function () {
+  const GLYPH = { K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙', k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟' };
+  const LEVEL_DEPTH = { beginner:1, club:2, expert:3, master:4 };
+  const COACH_DEPTH = 3;
+
+  function loadPref(key, fallback) { try { const v = localStorage.getItem(key); return v===null ? fallback : v; } catch(e) { return fallback; } }
+  function savePref(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
+
+  /* ---------------- Tabs ---------------- */
+  const tabs = document.querySelectorAll('.tab');
+  const sections = { play: document.getElementById('tab-play'), learn: document.getElementById('tab-learn'), strategy: document.getElementById('tab-strategy'), lessons: document.getElementById('tab-lessons'), puzzles: document.getElementById('tab-puzzles') };
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => { x.classList.remove('active'); x.setAttribute('aria-selected','false'); });
+    t.classList.add('active'); t.setAttribute('aria-selected','true');
+    Object.entries(sections).forEach(([k, el]) => el.hidden = (k !== t.dataset.tab));
+    savePref('activeTab', t.dataset.tab);
+    if (t.dataset.tab !== 'lessons' && typeof stopLessonPlayback === 'function') stopLessonPlayback();
+  }));
+  const savedTab = loadPref('activeTab', 'play');
+  if (savedTab !== 'play') { const btn = document.querySelector('.tab[data-tab="'+savedTab+'"]'); if (btn) btn.click(); }
+
+  /* ---------------- Board rendering ---------------- */
+  function buildBoardSquares(container, orientation, mini) {
+    container.innerHTML = '';
+    container.classList.toggle('mini', !!mini);
+    const order = [];
+    if (orientation === 'w') { for (let r=7;r>=0;r--) for (let f=0;f<8;f++) order.push(Chess.sq(f,r)); }
+    else { for (let r=0;r<8;r++) for (let f=7;f>=0;f--) order.push(Chess.sq(f,r)); }
+    for (const s of order) {
+      const f = Chess.fileOf(s), r = Chess.rankOf(s);
+      const btn = document.createElement('button');
+      btn.className = 'sq ' + (((f+r)%2===0) ? 'dark' : 'light');
+      btn.dataset.sq = s; btn.type = 'button';
+      const showFile = (orientation==='w' && r===0) || (orientation==='b' && r===7);
+      const showRank = (orientation==='w' && f===0) || (orientation==='b' && f===7);
+      if (showFile) { const c=document.createElement('span'); c.className='coord file'; c.textContent='abcdefgh'[f]; btn.appendChild(c); }
+      if (showRank) { const c=document.createElement('span'); c.className='coord rank'; c.textContent=String(r+1); btn.appendChild(c); }
+      container.appendChild(btn);
+    }
+  }
+  function paintBoard(container, state, opts) {
+    opts = opts || {};
+    const cells = container.querySelectorAll('.sq');
+    cells.forEach(cell => {
+      const s = Number(cell.dataset.sq);
+      cell.classList.remove('selected','last','check','dest-empty','dest-capture','risky');
+      const old = cell.querySelector('.glyph'); if (old) old.remove();
+      const p = state.board[s];
+      if (p) { const g = document.createElement('span'); g.className = 'glyph ' + (Chess.isWhite(p)?'w':'b'); g.textContent = GLYPH[p]; cell.appendChild(g); }
+      if (opts.selected === s) cell.classList.add('selected');
+      if (opts.lastMove && (opts.lastMove.from===s || opts.lastMove.to===s)) cell.classList.add('last');
+      if (opts.checkSq === s) cell.classList.add('check');
+      const dest = (opts.destinations||[]).find(d => d.to === s);
+      if (dest) { cell.classList.add(dest.capture ? 'dest-capture' : 'dest-empty'); if (dest.risky) cell.classList.add('risky'); }
+    });
+    // The hint used to be a colored box around the from/to squares; an arrow
+    // reads more directly as "the piece goes from here to there," so it's
+    // drawn on a separate SVG overlay instead of a per-square class. Only
+    // the main Play board has that overlay (mini boards elsewhere don't
+    // show hints), hence the container check.
+    if (container === playBoardEl) updateHintArrow(opts.hintFrom, opts.hintTo);
+  }
+
+  const hintArrowLayerNS = 'http://www.w3.org/2000/svg';
+  function squareCenterPercent(s, boardOrientation) {
+    const f = Chess.fileOf(s), r = Chess.rankOf(s);
+    const row = boardOrientation === 'w' ? 7 - r : r;
+    const col = boardOrientation === 'w' ? f : 7 - f;
+    return { x: (col + 0.5) / 8 * 100, y: (row + 0.5) / 8 * 100 };
+  }
+  function updateHintArrow(fromSq, toSq) {
+    const layer = document.getElementById('hintArrowLayer');
+    if (!layer) return;
+    layer.innerHTML = '';
+    if (fromSq == null || toSq == null) return;
+    const a = squareCenterPercent(fromSq, orientation), b = squareCenterPercent(toSq, orientation);
+    // A knight's move drawn as a straight diagonal doesn't read as a knight
+    // move at all — chess sites bend the arrow into an L through the square
+    // the knight's path would "turn" at, going the long way (2 squares)
+    // first and the short way (1 square) second. Any other piece just gets
+    // a direct line, since its move is a straight line on the board too.
+    const df = Chess.fileOf(toSq) - Chess.fileOf(fromSq), dr = Chess.rankOf(toSq) - Chess.rankOf(fromSq);
+    const isKnightMove = (Math.abs(df)===1 && Math.abs(dr)===2) || (Math.abs(df)===2 && Math.abs(dr)===1);
+    let points;
+    if (isKnightMove) {
+      const bendSq = Math.abs(dr)===2 ? Chess.sq(Chess.fileOf(fromSq), Chess.rankOf(toSq)) : Chess.sq(Chess.fileOf(toSq), Chess.rankOf(fromSq));
+      points = [a, squareCenterPercent(bendSq, orientation), b];
+    } else {
+      points = [a, b];
+    }
+    drawHintArrowPath(layer, points);
+  }
+  function drawHintArrowPath(layer, points) {
+    const ns = hintArrowLayerNS;
+    const shaftWidth = 3.2, headLength = 6.5, headWidth = 7.8, tipPad = 1.5;
+    const last = points[points.length - 1], prev = points[points.length - 2];
+    const dx = last.x - prev.x, dy = last.y - prev.y;
+    const segLen = Math.hypot(dx, dy) || 1;
+    const ux = dx / segLen, uy = dy / segLen;
+    // Pull the tip back a touch from the exact square center (so it doesn't
+    // sit dead-center under the piece glyph), then stop the shaft where the
+    // arrowhead's base begins so the two don't overlap.
+    const tip = { x: last.x - ux * tipPad, y: last.y - uy * tipPad };
+    const shaftEnd = { x: tip.x - ux * headLength, y: tip.y - uy * headLength };
+    const shaftPoints = points.slice(0, -1).concat([shaftEnd]);
+    let d = 'M ' + shaftPoints[0].x + ' ' + shaftPoints[0].y;
+    for (let i = 1; i < shaftPoints.length; i++) d += ' L ' + shaftPoints[i].x + ' ' + shaftPoints[i].y;
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'hint-arrow-shaft');
+    path.setAttribute('stroke-width', shaftWidth);
+    layer.appendChild(path);
+    const perpX = -uy, perpY = ux;
+    const leftX = shaftEnd.x + perpX * headWidth/2, leftY = shaftEnd.y + perpY * headWidth/2;
+    const rightX = shaftEnd.x - perpX * headWidth/2, rightY = shaftEnd.y - perpY * headWidth/2;
+    const head = document.createElementNS(ns, 'polygon');
+    head.setAttribute('points', tip.x+','+tip.y+' '+leftX+','+leftY+' '+rightX+','+rightY);
+    head.setAttribute('class', 'hint-arrow-head');
+    layer.appendChild(head);
+  }
+
+  /* ================= PLAY TAB ================= */
+  const playBoardEl = document.getElementById('playBoard');
+  const levelSelect = document.getElementById('levelSelect');
+  const modeSelect = document.getElementById('modeSelect');
+  const colorSelect = document.getElementById('colorSelect');
+  const autoCoach = document.getElementById('autoCoach');
+  levelSelect.value = loadPref('level', 'club');
+  modeSelect.value = loadPref('mode', 'engine');
+  colorSelect.value = loadPref('playAs', 'w');
+  autoCoach.checked = loadPref('autoCoach', '1') === '1';
+
+  let state = Chess.newGame();
+  let mode = modeSelect.value; // 'engine' = computer plays the other side, 'manual' = you move both sides
+  let humanColor = colorSelect.value;
+  let orientation = mode === 'manual' ? 'w' : humanColor;
+  buildBoardSquares(playBoardEl, orientation, false);
+  const configureCaptureBtn = document.getElementById('configureCaptureBtn');
+  const capturePanel = document.getElementById('capturePanel');
+  const configureOnlineBtn = document.getElementById('configureOnlineBtn');
+  const onlinePanel = document.getElementById('onlinePanel');
+  const autoCoachRow = document.getElementById('autoCoachRow');
+  function applyModeVisibility() {
+    colorSelect.hidden = mode === 'manual' || mode === 'online';
+    levelSelect.hidden = mode !== 'engine';
+    configureCaptureBtn.hidden = mode !== 'capture';
+    if (mode !== 'capture') capturePanel.hidden = true;
+    configureOnlineBtn.hidden = mode !== 'online';
+    if (mode !== 'online') onlinePanel.hidden = true;
+    // Engine assistance during a real match against another person isn't a
+    // coaching tool anymore, it's just cheating your opponent — so the
+    // "always show best move" toggle only exists outside online play.
+    autoCoachRow.hidden = mode === 'online';
+  }
+  applyModeVisibility();
+  let selected = null;
+  let lastMove = null;
+  let undoStack = [];
+  let plyHistory = []; // {san, mover, classification}
+  let hint = null; // {from, to}
+  let gameOver = false;
+
+  function destinationsFor(sq) {
+    const legal = Chess.genLegalMoves(state).filter(m => m.from === sq);
+    const seen = new Map();
+    for (const m of legal) {
+      if (seen.has(m.to)) continue;
+      const after = Chess.applyMove(state, m);
+      const risky = Coach.hangingPieces(after, state.turn).some(h => h.sq === m.to);
+      seen.set(m.to, { to: m.to, capture: !!m.captured, risky });
+    }
+    return Array.from(seen.values());
+  }
+
+  function render() {
+    const status = Chess.gameStatus(state);
+    const checkSq = status.check ? Chess.findKing(state.board, state.turn) : null;
+    paintBoard(playBoardEl, state, {
+      selected, lastMove, checkSq,
+      destinations: selected!=null ? destinationsFor(selected) : [],
+      hintFrom: hint ? hint.from : null, hintTo: hint ? hint.to : null,
+    });
+    renderMoveList();
+    renderEval();
+    renderStatusLine(status);
+    if (!status.over) renderCoach(); else renderGameOver(status);
+    const posInfoEl = document.getElementById('debugPositionInfo');
+    if (posInfoEl) {
+      if (!plyHistory.length) posInfoEl.textContent = '1. (start position, nothing played yet)';
+      else {
+        let s = '';
+        for (let i=0;i<plyHistory.length;i+=2) s += (i/2+1)+'. '+plyHistory[i].san+' '+(plyHistory[i+1]?plyHistory[i+1].san+' ':'');
+        posInfoEl.textContent = s.trim();
+      }
+    }
+  }
+
+  function renderStatusLine(status) {
+    const el = document.getElementById('coachStatus');
+    if (status.over) { el.textContent = 'Game over'; return; }
+    const side = state.turn === 'w' ? 'White' : 'Black';
+    const whoTag = mode === 'manual' ? ' (your move)' : (state.turn===humanColor ? ' (you)' : ' (opponent)');
+    el.textContent = side + ' to move' + (status.check ? ' — in check' : '') + whoTag;
+  }
+
+  function renderEval() {
+    const cp = Chess.evaluate(state);
+    const pct = Coach.evalToWhitePct(cp) * 100;
+    document.getElementById('evalFill').style.width = pct.toFixed(1) + '%';
+    const pawns = (cp/100);
+    document.getElementById('evalLabel').textContent = (pawns>0?'+':'') + pawns.toFixed(1);
+  }
+
+  function renderMoveList() {
+    const ol = document.getElementById('moveList'); ol.innerHTML = '';
+    for (let i=0;i<plyHistory.length;i+=2) {
+      const row = document.createElement('li'); row.className = 'ply-row';
+      const num = document.createElement('span'); num.className='num'; num.textContent = (i/2+1)+'.';
+      const w = document.createElement('span'); w.className='mv'; const wp = plyHistory[i];
+      if (wp) { w.textContent = wp.san; if (wp.cls==='Blunder') w.classList.add('hl-blunder'); if (wp.cls==='Mistake') w.classList.add('hl-mistake'); }
+      const b = document.createElement('span'); b.className='mv'; const bp = plyHistory[i+1];
+      if (bp) { b.textContent = bp.san; if (bp.cls==='Blunder') b.classList.add('hl-blunder'); if (bp.cls==='Mistake') b.classList.add('hl-mistake'); }
+      row.appendChild(num); row.appendChild(w); row.appendChild(b); ol.appendChild(row);
+    }
+    ol.scrollTop = ol.scrollHeight;
+  }
+
+  function renderThreats() {
+    const ul = document.getElementById('threatsList'); ul.innerHTML = '';
+    const refColor = mode === 'manual' ? state.turn : humanColor;
+    const oppColor = refColor==='w'?'b':'w';
+    const mine = Coach.hangingPieces(state, refColor);
+    const theirs = Coach.hangingPieces(state, oppColor);
+    const mineLabel = mode === 'manual' ? (refColor==='w'?"White's":"Black's") : 'Your';
+    const theirsLabel = mode === 'manual' ? (oppColor==='w'?"White's":"Black's") : "Opponent's";
+    const items = [];
+    mine.forEach(h => items.push({ text: mineLabel + ' ' + Coach.pname(h.piece) + ' on ' + Chess.sqName(h.sq) + ' is undefended and can be captured.', sq:h.sq, mine:true }));
+    theirs.forEach(h => items.push({ text: theirsLabel + ' ' + Coach.pname(h.piece) + ' on ' + Chess.sqName(h.sq) + ' is hanging' + (mode==='manual' ? '.' : ' — you can win it.'), sq:h.sq, mine:false }));
+    if (!items.length) { const li=document.createElement('li'); li.className='threats-empty'; li.textContent='No immediate hanging pieces for either side.'; ul.appendChild(li); return; }
+    items.forEach(it => {
+      const li = document.createElement('li');
+      const dot = document.createElement('span'); dot.className = 'dot ' + (it.mine?'mine':'theirs'); li.appendChild(dot);
+      const span = document.createElement('span'); span.textContent = it.text; li.appendChild(span);
+      li.addEventListener('click', () => { hint = { from: it.sq, to: it.sq }; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  function renderCoach() {
+    renderThreats();
+    const legal = Chess.genLegalMoves(state);
+    if (!legal.length) return;
+    const { move: best } = Chess.searchBest(state, COACH_DEPTH);
+    const showIt = (mode !== 'online' && autoCoach.checked) || hint;
+    const box = document.getElementById('coachExplain');
+    if (!showIt) {
+      box.innerHTML = '<p class="coach-headline">Ready when you are.</p><p class="coach-reasons" style="padding-left:0;">Press <strong>Hint</strong> to see the coach\'s recommended move and why.</p>';
+      return;
+    }
+    const info = Coach.explainMove(state, best);
+    hint = { from: best.from, to: best.to };
+    box.innerHTML = '';
+    const h = document.createElement('p'); h.className='coach-headline'; h.textContent = info.headline; box.appendChild(h);
+    const ul = document.createElement('ul'); ul.className='coach-reasons';
+    info.reasons.forEach(r => { const li=document.createElement('li'); li.textContent=r; ul.appendChild(li); });
+    box.appendChild(ul);
+    paintBoard(playBoardEl, state, { selected, lastMove, hintFrom: best.from, hintTo: best.to,
+      checkSq: Chess.gameStatus(state).check ? Chess.findKing(state.board, state.turn) : null,
+      destinations: selected!=null ? destinationsFor(selected) : [] });
+  }
+
+  function renderGameOver(status) {
+    const box = document.getElementById('coachExplain');
+    let msg;
+    if (status.reason==='checkmate') msg = (status.result==='1-0'?'White':'Black') + ' wins by checkmate!';
+    else msg = 'Draw by ' + status.reason + '.';
+    box.innerHTML = '<div class="result-banner">'+msg+'</div>';
+    document.getElementById('threatsList').innerHTML = '';
+    gameOver = true;
+  }
+
+  function showFeedback(cls) {
+    const box = document.getElementById('feedbackBox');
+    if (!cls) { box.innerHTML=''; return; }
+    const badgeClass = cls.label.toLowerCase().replace(' move','').replace(' ','');
+    let text = cls.label + '.';
+    if (cls.label !== 'Best move' && cls.bestSan) text += ' ' + cls.bestSan + ' was stronger.';
+    box.innerHTML = '<span class="badge ' + badgeClass + '">' + cls.label + '</span> <span style="margin-left:8px; font-size:.85rem; color:var(--ink-dim);">' + (cls.label!=='Best move' ? cls.bestSan + ' was stronger.' : 'Nicely played.') + '</span>';
+  }
+
+  function afterHumanMove(prevState, move) {
+    const cls = Coach.classifyPlayedMove(prevState, move, COACH_DEPTH);
+    showFeedback(cls);
+    return cls.label;
+  }
+
+  function doMove(move, opts) {
+    const prevState = state;
+    const legal = Chess.genLegalMoves(prevState);
+    const san = Chess.sanFor(prevState, move, legal);
+    const wasHuman = mode === 'manual' || prevState.turn === humanColor;
+    let cls = null;
+    if (wasHuman) cls = Coach.classifyPlayedMove(prevState, move, COACH_DEPTH);
+    undoStack.push(prevState);
+    state = Chess.applyMove(prevState, move);
+    lastMove = { from: move.from, to: move.to };
+    plyHistory.push({ san, mover: prevState.turn, cls: cls ? cls.label : null });
+    selected = null; hint = null;
+    if (wasHuman) showFeedback(cls); else showFeedback(null);
+    render();
+    const status = Chess.gameStatus(state);
+    if (mode === 'engine' && !status.over && state.turn !== humanColor) setTimeout(engineMove, 350);
+    if (mode === 'online' && !(opts && opts.remote)) sendOnlineMoveMsg(move);
+  }
+
+  function engineMove() {
+    if (mode !== 'engine' || state.turn === humanColor) return;
+    const depth = LEVEL_DEPTH[levelSelect.value] || 2;
+    const { ranked } = Chess.searchBest(state, depth);
+    if (!ranked.length) return;
+    let chosen = ranked[0].move;
+    const level = levelSelect.value;
+    if (level === 'beginner' || level === 'club') {
+      const poolSize = level==='beginner' ? Math.min(5, ranked.length) : Math.min(3, ranked.length);
+      const weights = level==='beginner' ? [0.34,0.24,0.18,0.14,0.10] : [0.7,0.2,0.1];
+      let r = Math.random(), acc = 0, idx = 0;
+      for (let i=0;i<poolSize;i++) { acc += weights[i]||0; if (r<=acc) { idx=i; break; } idx=i; }
+      chosen = ranked[idx].move;
+    }
+    doMove(chosen);
+  }
+
+  function trySelect(sq) {
+    const piece = state.board[sq];
+    if (selected != null) {
+      const dests = destinationsFor(selected);
+      const dest = dests.find(d => d.to === sq);
+      if (dest) {
+        const legal = Chess.genLegalMoves(state).filter(m => m.from===selected && m.to===sq);
+        if (legal.length > 1) { askPromotion(selected, sq, legal); return; }
+        doMove(legal[0]);
+        return;
+      }
+    }
+    const canMove = mode === 'manual' || (mode === 'online' ? (onlineInGame && state.turn === humanColor) : state.turn === humanColor);
+    if (piece && ((state.turn==='w') === Chess.isWhite(piece)) && canMove && !gameOver) {
+      selected = (selected === sq) ? null : sq;
+    } else {
+      selected = null;
+    }
+    render();
+  }
+
+  function askPromotion(from, to, moves) {
+    const color = state.turn;
+    const overlay = document.createElement('div'); overlay.className='promo-overlay';
+    const box = document.createElement('div'); box.className='promo-box';
+    ['Q','R','B','N'].forEach(letter => {
+      const btn = document.createElement('button');
+      const piece = color==='w'?letter:letter.toLowerCase();
+      btn.textContent = GLYPH[piece];
+      btn.style.color = color==='w' ? 'var(--piece-white)' : 'var(--piece-black)';
+      btn.addEventListener('click', () => {
+        overlay.remove();
+        const move = moves.find(m => m.promotion === piece);
+        doMove(move);
+      });
+      box.appendChild(btn);
+    });
+    overlay.appendChild(box);
+    playBoardEl.parentElement.appendChild(overlay);
+  }
+
+  playBoardEl.addEventListener('click', (e) => {
+    const cell = e.target.closest('.sq'); if (!cell) return;
+    trySelect(Number(cell.dataset.sq));
+  });
+
+  function startNewGame() {
+    state = Chess.newGame(); undoStack = []; plyHistory = []; selected=null; lastMove=null; hint=null; gameOver=false;
+    showFeedback(null);
+    render();
+    if (mode === 'engine' && state.turn !== humanColor) setTimeout(engineMove, 350);
+  }
+  document.getElementById('newGameBtn').addEventListener('click', () => {
+    startNewGame();
+    if (mode === 'online' && onlineInGame) onlineSend({ t: 'newgame' });
+  });
+  document.getElementById('undoBtn').addEventListener('click', () => {
+    if (!undoStack.length) return;
+    // In engine mode, undo back to the last time it was the human's turn.
+    // In manual mode (you move both sides), a single step back is enough.
+    let s = undoStack.pop(); plyHistory.pop();
+    if (mode === 'engine') { while (undoStack.length && s.turn !== humanColor) { s = undoStack.pop(); plyHistory.pop(); } }
+    state = s; selected=null; hint=null; gameOver=false; showFeedback(null);
+    render();
+  });
+  modeSelect.addEventListener('change', () => {
+    if (mode === 'capture' && typeof stopCapture === 'function') stopCapture();
+    if (mode === 'online') resetOnlineConnection();
+    mode = modeSelect.value; savePref('mode', mode);
+    applyModeVisibility();
+    orientation = mode === 'manual' ? 'w' : humanColor;
+    buildBoardSquares(playBoardEl, orientation, false);
+    startNewGame();
+  });
+  configureCaptureBtn.addEventListener('click', () => { capturePanel.hidden = !capturePanel.hidden; if (typeof debugLog === 'function') debugLog('Capture panel ' + (capturePanel.hidden ? 'closed' : 'opened') + '.'); });
+  configureOnlineBtn.addEventListener('click', () => { onlinePanel.hidden = !onlinePanel.hidden; });
+  colorSelect.addEventListener('change', () => {
+    humanColor = colorSelect.value; savePref('playAs', humanColor);
+    orientation = humanColor;
+    buildBoardSquares(playBoardEl, orientation, false);
+    startNewGame();
+  });
+  document.getElementById('flipBtn').addEventListener('click', () => {
+    orientation = orientation === 'w' ? 'b' : 'w';
+    buildBoardSquares(playBoardEl, orientation, false);
+    render();
+  });
+  document.getElementById('hintBtn').addEventListener('click', () => {
+    const { move: best } = Chess.searchBest(state, COACH_DEPTH);
+    if (best) { hint = { from: best.from, to: best.to }; renderCoach(); }
+  });
+  levelSelect.addEventListener('change', () => savePref('level', levelSelect.value));
+  autoCoach.addEventListener('change', () => { savePref('autoCoach', autoCoach.checked?'1':'0'); renderCoach(); });
+
+  /* ================= ONLINE PLAY (shared lobby, WebSocket) ================= */
+  // A small always-on server (see server.js) tracks who's connected, lists
+  // open games, relays lobby chat, and — once two players are matched —
+  // relays their moves too. Nothing peer-to-peer here: every message just
+  // goes through that one server, which is what makes a shared "who's
+  // online / open games" lobby possible in the first place.
+  const onlineConnectStep = document.getElementById('onlineConnectStep');
+  const onlineLobbyStep = document.getElementById('onlineLobbyStep');
+  const onlineGameStep = document.getElementById('onlineGameStep');
+  const onlineNameInput = document.getElementById('onlineNameInput');
+  const onlineServerInput = document.getElementById('onlineServerInput');
+  const onlineConnectBtn = document.getElementById('onlineConnectBtn');
+  const onlineStatusEl = document.getElementById('onlineStatus');
+  const onlineUsersList = document.getElementById('onlineUsersList');
+  const onlineGamesList = document.getElementById('onlineGamesList');
+  const onlineHostBtn = document.getElementById('onlineHostBtn');
+  const onlineChatLog = document.getElementById('onlineChatLog');
+  const onlineChatInput = document.getElementById('onlineChatInput');
+  const onlineChatSendBtn = document.getElementById('onlineChatSendBtn');
+  const onlineGameStatus = document.getElementById('onlineGameStatus');
+  const onlineLeaveBtn = document.getElementById('onlineLeaveBtn');
+
+  function defaultOnlineServerUrl() {
+    if (location.protocol === 'file:') return '';
+    return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  }
+  onlineServerInput.value = loadPref('onlineServer', defaultOnlineServerUrl());
+  onlineNameInput.value = loadPref('onlineName', '');
+
+  let onlineWs = null;
+  let onlineInGame = false;
+  let onlineHostingGameId = null;
+  let onlineMyName = '';
+
+  function setOnlineStatus(text) { onlineStatusEl.textContent = text; }
+
+  function onlineShowStep(step) {
+    onlineConnectStep.hidden = step !== 'connect';
+    onlineLobbyStep.hidden = step !== 'lobby';
+    onlineGameStep.hidden = step !== 'game';
+  }
+
+  function onlineSend(msg) {
+    if (onlineWs && onlineWs.readyState === WebSocket.OPEN) onlineWs.send(JSON.stringify(msg));
+  }
+
+  function connectToLobby() {
+    const name = onlineNameInput.value.trim().slice(0, 20) || 'Player';
+    const url = onlineServerInput.value.trim();
+    if (!url) { setOnlineStatus('Enter the lobby server address first.'); return; }
+    savePref('onlineName', name);
+    savePref('onlineServer', url);
+    onlineMyName = name;
+    setOnlineStatus('Connecting...');
+    let ws;
+    try { ws = new WebSocket(url); } catch (err) { setOnlineStatus('Invalid server address.'); return; }
+    onlineWs = ws;
+    ws.addEventListener('open', () => { onlineSend({ t: 'hello', name }); });
+    ws.addEventListener('message', (ev) => {
+      let msg; try { msg = JSON.parse(ev.data); } catch (err) { return; }
+      handleOnlineMessage(msg);
+    });
+    ws.addEventListener('close', () => {
+      setOnlineStatus('Disconnected from lobby server.');
+      onlineShowStep('connect');
+      onlineInGame = false; onlineHostingGameId = null; onlineWs = null;
+    });
+    ws.addEventListener('error', () => { setOnlineStatus("Couldn't reach the lobby server. Check the address and try again."); });
+  }
+
+  function handleOnlineMessage(msg) {
+    if (msg.t === 'welcome') {
+      setOnlineStatus('Connected as ' + onlineMyName + '.');
+      onlineShowStep('lobby');
+    } else if (msg.t === 'lobby') {
+      renderOnlineLobby(msg.users, msg.games);
+    } else if (msg.t === 'hosted') {
+      onlineHostingGameId = msg.id;
+    } else if (msg.t === 'chat') {
+      appendOnlineChat(msg.name, msg.text);
+    } else if (msg.t === 'gameStart') {
+      onlineInGame = true; onlineHostingGameId = null;
+      humanColor = msg.color; orientation = msg.color;
+      buildBoardSquares(playBoardEl, orientation, false);
+      onlineGameStatus.textContent = 'Playing ' + (msg.color === 'w' ? 'White' : 'Black') + ' vs ' + msg.opponent + '.';
+      onlineShowStep('game');
+      startNewGame();
+    } else if (msg.t === 'move') {
+      const legal = Chess.genLegalMoves(state);
+      const match = legal.find(m => m.from === msg.from && m.to === msg.to && (m.promotion || null) === (msg.promotion || null));
+      if (match) doMove(match, { remote: true });
+    } else if (msg.t === 'newgame') {
+      startNewGame();
+    } else if (msg.t === 'opponentLeft') {
+      onlineInGame = false;
+      onlineGameStatus.textContent = 'Your opponent left the game.';
+      setTimeout(() => { onlineShowStep('lobby'); }, 1200);
+    } else if (msg.t === 'error') {
+      setOnlineStatus(msg.message);
+    }
+  }
+
+  function renderOnlineLobby(users, games) {
+    onlineUsersList.innerHTML = '';
+    users.forEach(u => {
+      const li = document.createElement('li');
+      li.textContent = u.name + (u.name === onlineMyName ? ' (you)' : '');
+      onlineUsersList.appendChild(li);
+    });
+    if (!users.length) { const li = document.createElement('li'); li.className = 'lobby-empty'; li.textContent = 'No one else online yet.'; onlineUsersList.appendChild(li); }
+
+    onlineGamesList.innerHTML = '';
+    games.forEach(g => {
+      const li = document.createElement('li');
+      const isMine = g.id === onlineHostingGameId;
+      const span = document.createElement('span'); span.textContent = g.hostName + "'s game" + (isMine ? ' (waiting for opponent...)' : '');
+      li.appendChild(span);
+      const btn = document.createElement('button'); btn.className = 'btn';
+      if (isMine) { btn.textContent = 'Cancel'; btn.addEventListener('click', () => { onlineSend({ t: 'cancel' }); onlineHostingGameId = null; }); }
+      else { btn.textContent = 'Join'; btn.addEventListener('click', () => onlineSend({ t: 'join', id: g.id })); }
+      li.appendChild(btn);
+      onlineGamesList.appendChild(li);
+    });
+    if (!games.length) { const li = document.createElement('li'); li.className = 'lobby-empty'; li.textContent = 'No open games — host one!'; onlineGamesList.appendChild(li); }
+  }
+
+  function appendOnlineChat(name, text) {
+    const div = document.createElement('div'); div.className = 'lobby-chat-msg';
+    const strong = document.createElement('strong'); strong.textContent = name + ': ';
+    div.appendChild(strong);
+    div.appendChild(document.createTextNode(text));
+    onlineChatLog.appendChild(div);
+    onlineChatLog.scrollTop = onlineChatLog.scrollHeight;
+  }
+
+  function sendOnlineChat() {
+    const text = onlineChatInput.value.trim();
+    if (!text) return;
+    onlineSend({ t: 'chat', text });
+    onlineChatInput.value = '';
+  }
+
+  function hostOnlineGame() { onlineSend({ t: 'host' }); }
+
+  function sendOnlineMoveMsg(move) {
+    onlineSend({ t: 'move', from: move.from, to: move.to, promotion: move.promotion || null });
+  }
+
+  function leaveOnlineGame() {
+    onlineSend({ t: 'leave' });
+    onlineInGame = false;
+    onlineShowStep('lobby');
+  }
+
+  function resetOnlineConnection() {
+    if (onlineWs) { try { onlineWs.close(); } catch (err) {} onlineWs = null; }
+    onlineInGame = false; onlineHostingGameId = null;
+    onlineShowStep('connect');
+    setOnlineStatus('Not connected.');
+  }
+
+  onlineConnectBtn.addEventListener('click', connectToLobby);
+  onlineHostBtn.addEventListener('click', hostOnlineGame);
+  onlineChatSendBtn.addEventListener('click', sendOnlineChat);
+  onlineChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOnlineChat(); });
+  onlineLeaveBtn.addEventListener('click', leaveOnlineGame);
+  onlineShowStep('connect');
+
+  render();
+
+  /* ================= SCREEN CAPTURE (opponent's move) ================= */
+  const captureVideo = document.getElementById('captureVideo');
+  const capturePreviewWrap = document.getElementById('capturePreviewWrap');
+  const captureRectEl = document.getElementById('captureRect');
+  const handleTL = document.getElementById('handleTL');
+  const handleBR = document.getElementById('handleBR');
+  const captureStatusEl = document.getElementById('captureStatus');
+  const captureAlignHint = document.getElementById('captureAlignHint');
+  const flipRow = document.getElementById('flipRow');
+  const captureFlippedEl = document.getElementById('captureFlipped');
+  const captureSyncRow = document.getElementById('captureSyncRow');
+  const captureCandidatesEl = document.getElementById('captureCandidates');
+  let captureStream = null;
+  let captureRectFrac = { x0: 0.12, y0: 0.06, x1: 0.88, y1: 0.94 }; // fraction of displayed video box
+  let captureBaseline = null; // 64 {avg,variance} cells
+  let autoDetectTimer = null;
+  let autoDetectArmed = false;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  const recordStatusEl = document.getElementById('recordStatus');
+  function setRecordStatus(msg) { recordStatusEl.textContent = msg; }
+
+  function setCaptureStatus(msg) { captureStatusEl.textContent = msg; }
+
+  // ---- Event log: a timestamped, always-on record of the capture flow
+  // (independent of the Debug checkbox, so nothing is lost if it's turned
+  // on after something already went wrong). ----
+  const debugLogEl = document.getElementById('debugLog');
+  const debugLogLines = [];
+  function debugLog(msg) {
+    const t = new Date();
+    const ts = String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+':'+String(t.getSeconds()).padStart(2,'0')+'.'+String(t.getMilliseconds()).padStart(3,'0');
+    debugLogLines.push('[' + ts + '] ' + msg);
+    if (debugLogLines.length > 400) debugLogLines.shift();
+    if (debugLogEl) {
+      debugLogEl.textContent = debugLogLines.join('\n');
+      debugLogEl.scrollTop = debugLogEl.scrollHeight;
+    }
+  }
+  document.getElementById('debugLogCopy').addEventListener('click', async () => {
+    const text = debugLogLines.join('\n') || '(log is empty)';
+    try { await navigator.clipboard.writeText(text); setCaptureStatus('Log copied to clipboard (' + debugLogLines.length + ' lines).'); }
+    catch (e) { setCaptureStatus('Could not copy automatically — select the log text and copy it manually.'); }
+  });
+  document.getElementById('debugLogClear').addEventListener('click', () => { debugLogLines.length = 0; debugLogEl.textContent = ''; });
+
+  async function startCapture() {
+    debugLog('Requesting screen/window/tab share…');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      setCaptureStatus('Screen capture is not available in this browser/context.');
+      debugLog('FAILED: navigator.mediaDevices.getDisplayMedia is not available in this context (likely a sandboxed embed without display-capture permission).');
+      return;
+    }
+    try {
+      captureStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'never' }, audio: false });
+    } catch (err) {
+      setCaptureStatus('Screen sharing was blocked or cancelled (' + (err && err.name || 'error') + '). If you are viewing this inside an embedded preview, try opening the page in its own browser tab.');
+      debugLog('FAILED: getDisplayMedia rejected — name="' + (err && err.name) + '" message="' + (err && err.message) + '".');
+      return;
+    }
+    const track = captureStream.getVideoTracks()[0];
+    const settings = track.getSettings ? track.getSettings() : {};
+    debugLog('Sharing started. track label="' + track.label + '", settings=' + JSON.stringify(settings) + '.');
+    captureVideo.srcObject = captureStream;
+    track.addEventListener('ended', () => { debugLog('Screen share ended (track "ended" event — user stopped sharing from the browser UI, or the shared window/tab closed).'); stopCapture(); });
+    document.getElementById('captureStartBtn').hidden = true;
+    document.getElementById('captureStopBtn').hidden = false;
+    capturePreviewWrap.hidden = false;
+    captureAlignHint.hidden = false;
+    flipRow.hidden = false;
+    captureSyncRow.hidden = false;
+    document.getElementById('captureRollingHint').hidden = false;
+    captureBaseline = null;
+    setCaptureStatus('Sharing. Drag the corners below to frame the board, then click "Start tracking".');
+    document.getElementById('captureRecordRow').hidden = false;
+    document.getElementById('recordHint').hidden = false;
+    positionRectHandles();
+  }
+  function stopCapture() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') { debugLog('Sharing stopped while recording was active — stopping the recording too.'); stopRecording(); }
+    if (captureStream) { captureStream.getTracks().forEach(t => t.stop()); captureStream = null; debugLog('Stopped sharing; tracks closed.'); }
+    captureVideo.srcObject = null;
+    document.getElementById('captureStartBtn').hidden = false;
+    document.getElementById('captureStopBtn').hidden = true;
+    capturePreviewWrap.hidden = true;
+    captureAlignHint.hidden = true;
+    flipRow.hidden = true;
+    captureSyncRow.hidden = true;
+    document.getElementById('captureRollingHint').hidden = true;
+    document.getElementById('captureRecordRow').hidden = true;
+    document.getElementById('recordHint').hidden = true;
+    captureCandidatesEl.hidden = true;
+    stopAutoDetect();
+    captureBaseline = null;
+    setCaptureStatus('Not sharing.');
+    document.getElementById('debugDiffSection').hidden = true;
+    document.getElementById('debugStreamInfo').textContent = 'No stream.';
+  }
+
+  // ---- Recording: captures the SAME video stream the detector reads (the
+  // shared screen/window/tab), independent of the alignment box, so a
+  // downloaded clip shows exactly what the app was seeing during a session —
+  // useful to attach alongside the text event log when debugging a miss.
+  function pickRecorderMimeType() {
+    const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4'];
+    for (const type of candidates) {
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return '';
+  }
+  function startRecording() {
+    if (!captureStream) { setRecordStatus('Not sharing yet — start sharing first.'); return; }
+    if (typeof MediaRecorder === 'undefined') {
+      setRecordStatus('Recording is not supported in this browser/context.');
+      debugLog('Recording FAILED: MediaRecorder is not available in this context.');
+      return;
+    }
+    recordedChunks = [];
+    const mimeType = pickRecorderMimeType();
+    try {
+      mediaRecorder = mimeType ? new MediaRecorder(captureStream, { mimeType }) : new MediaRecorder(captureStream);
+    } catch (err) {
+      setRecordStatus('Could not start recording (' + (err && err.name || 'error') + ').');
+      debugLog('Recording FAILED: MediaRecorder construction threw — name="' + (err && err.name) + '" message="' + (err && err.message) + '".');
+      return;
+    }
+    mediaRecorder.addEventListener('dataavailable', (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); });
+    mediaRecorder.addEventListener('stop', () => {
+      const sizeMb = recordedChunks.reduce((a, c) => a + c.size, 0) / 1024 / 1024;
+      document.getElementById('recordDownloadBtn').hidden = false;
+      setRecordStatus('Recording stopped (' + sizeMb.toFixed(1) + ' MB). Click "Download recording" to save it.');
+      debugLog('Recording stopped: ' + sizeMb.toFixed(2) + ' MB, mimeType="' + (mediaRecorder.mimeType || '') + '".');
+    });
+    mediaRecorder.start(1000);
+    debugLog('Recording started (mimeType="' + (mimeType || 'default') + '"), capturing the shared stream as read by this app.');
+    setRecordStatus('Recording…');
+    document.getElementById('recordStartBtn').hidden = true;
+    document.getElementById('recordStopBtn').hidden = false;
+    document.getElementById('recordDownloadBtn').hidden = true;
+  }
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    document.getElementById('recordStartBtn').hidden = false;
+    document.getElementById('recordStopBtn').hidden = true;
+  }
+  async function downloadRecording() {
+    if (!recordedChunks.length) { setRecordStatus('No recording to download yet.'); return; }
+    const ext = (mediaRecorder && mediaRecorder.mimeType || '').includes('mp4') ? 'mp4' : 'webm';
+    const filename = 'checkmate-coach-capture-' + Date.now() + '.' + ext;
+    const blob = new Blob(recordedChunks, { type: (mediaRecorder && mediaRecorder.mimeType) || 'video/webm' });
+    // Running as a published artifact, the page is sandboxed and can't drive
+    // a browser download directly — it has to hand the file to the viewer
+    // through the platform's own save prompt. Running as the downloaded
+    // standalone HTML file (which is how screen capture itself works, since
+    // the artifact iframe usually lacks display-capture permission anyway),
+    // there is no such bridge, so fall back to a plain anchor-click download.
+    if (typeof window.claude !== 'undefined' && typeof window.claude.use === 'function') {
+      try {
+        const downloads = await window.claude.use('downloads');
+        if (downloads) {
+          const result = await downloads.save({ filename, data: blob });
+          setRecordStatus('Recording ' + (result.status === 'delivered' ? 'sent' : 'saved') + ' as ' + filename + '.');
+          debugLog('Recording saved via platform downloads capability as ' + filename + ' (' + result.status + ').');
+          return;
+        }
+      } catch (err) {
+        debugLog('Platform downloads capability unavailable or declined (' + (err && err.code) + '); falling back to a direct browser download.');
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    debugLog('Recording downloaded directly as ' + filename + '.');
+  }
+
+  const captureGridCanvas = document.getElementById('captureGridCanvas');
+  const debugToggleEl = document.getElementById('debugToggle');
+  const captureDebugEl = document.getElementById('captureDebug');
+
+  function positionRectHandles() {
+    const w = capturePreviewWrap.clientWidth, h = capturePreviewWrap.clientHeight;
+    const x0 = captureRectFrac.x0 * w, y0 = captureRectFrac.y0 * h;
+    const x1 = captureRectFrac.x1 * w, y1 = captureRectFrac.y1 * h;
+    captureRectEl.style.left = x0 + 'px'; captureRectEl.style.top = y0 + 'px';
+    captureRectEl.style.width = (x1 - x0) + 'px'; captureRectEl.style.height = (y1 - y0) + 'px';
+    drawCalibrationGrid(w, h, x0, y0, x1, y1);
+  }
+
+  function drawCalibrationGrid(w, h, x0, y0, x1, y1) {
+    if (!w || !h) return;
+    captureGridCanvas.width = w; captureGridCanvas.height = h;
+    const ctx = captureGridCanvas.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+    if (!debugToggleEl || !debugToggleEl.checked) return;
+    ctx.strokeStyle = 'rgba(255,80,60,.85)'; ctx.lineWidth = 1;
+    for (let i = 1; i < 8; i++) {
+      const x = x0 + (x1 - x0) * (i / 8);
+      ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
+      const y = y0 + (y1 - y0) * (i / 8);
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+    }
+  }
+  window.addEventListener('resize', () => { if (!capturePreviewWrap.hidden) positionRectHandles(); });
+  captureVideo.addEventListener('loadedmetadata', () => { debugLog('Video metadata loaded: intrinsic size ' + captureVideo.videoWidth + 'x' + captureVideo.videoHeight + '.'); positionRectHandles(); });
+
+  function dragHandle(handleEl, corner) {
+    handleEl.addEventListener('pointerdown', (e) => {
+      handleEl.setPointerCapture(e.pointerId);
+      const move = (ev) => {
+        const box = capturePreviewWrap.getBoundingClientRect();
+        let fx = (ev.clientX - box.left) / box.width, fy = (ev.clientY - box.top) / box.height;
+        fx = Math.max(0, Math.min(1, fx)); fy = Math.max(0, Math.min(1, fy));
+        if (corner === 'tl') { captureRectFrac.x0 = Math.min(fx, captureRectFrac.x1 - 0.1); captureRectFrac.y0 = Math.min(fy, captureRectFrac.y1 - 0.1); }
+        else { captureRectFrac.x1 = Math.max(fx, captureRectFrac.x0 + 0.1); captureRectFrac.y1 = Math.max(fy, captureRectFrac.y0 + 0.1); }
+        positionRectHandles();
+      };
+      const up = (ev) => { handleEl.releasePointerCapture(e.pointerId); document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+        debugLog('Alignment rect set: x0=' + captureRectFrac.x0.toFixed(3) + ' y0=' + captureRectFrac.y0.toFixed(3) + ' x1=' + captureRectFrac.x1.toFixed(3) + ' y1=' + captureRectFrac.y1.toFixed(3) + ' (fractions of the preview box).'); };
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+    });
+  }
+  dragHandle(handleTL, 'tl'); dragHandle(handleBR, 'br');
+
+  function sampleCells() {
+    const vw = captureVideo.videoWidth, vh = captureVideo.videoHeight;
+    if (!vw || !vh) return null;
+    const canvas = document.createElement('canvas'); canvas.width = vw; canvas.height = vh;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(captureVideo, 0, 0, vw, vh);
+    const rx0 = captureRectFrac.x0 * vw, ry0 = captureRectFrac.y0 * vh;
+    const rx1 = captureRectFrac.x1 * vw, ry1 = captureRectFrac.y1 * vh;
+    const cellW = (rx1 - rx0) / 8, cellH = (ry1 - ry0) / 8;
+    const cells = [];
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const cx = rx0 + c * cellW, cy = ry0 + r * cellH;
+        const pw = Math.max(4, cellW * 0.5), ph = Math.max(4, cellH * 0.5);
+        const px = cx + (cellW - pw) / 2, py = cy + (cellH - ph) / 2;
+        let data;
+        try { data = ctx.getImageData(Math.round(px), Math.round(py), Math.round(pw), Math.round(ph)).data; }
+        catch (e) { cells.push({ avg: [0,0,0], variance: 0 }); continue; }
+        let sr=0, sg=0, sb=0, lumSum=0, lumSqSum=0, n=0;
+        for (let i=0; i<data.length; i+=4) {
+          const rr=data[i], gg=data[i+1], bb=data[i+2];
+          sr+=rr; sg+=gg; sb+=bb;
+          const lum = 0.299*rr + 0.587*gg + 0.114*bb;
+          lumSum += lum; lumSqSum += lum*lum; n++;
+        }
+        n = Math.max(1, n);
+        const avg = [sr/n, sg/n, sb/n];
+        const variance = (lumSqSum/n) - (lumSum/n)*(lumSum/n);
+        cells.push({ avg, variance });
+      }
+    }
+    return cells;
+  }
+
+  function drawSwatches(cells) {
+    if (!cells) return;
+    const canvas = document.getElementById('debugSwatchCanvas');
+    const ctx = canvas.getContext('2d');
+    const cell = canvas.width / 8;
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      const cellData = cells[r*8+c];
+      ctx.fillStyle = 'rgb(' + Math.round(cellData.avg[0]) + ',' + Math.round(cellData.avg[1]) + ',' + Math.round(cellData.avg[2]) + ')';
+      ctx.fillRect(c*cell, r*cell, cell, cell);
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1;
+    for (let i = 0; i <= 8; i++) { ctx.beginPath(); ctx.moveTo(i*cell,0); ctx.lineTo(i*cell,canvas.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,i*cell); ctx.lineTo(canvas.width,i*cell); ctx.stroke(); }
+  }
+  function updateStreamInfo() {
+    const el = document.getElementById('debugStreamInfo');
+    if (!captureStream) { el.textContent = 'No stream.'; return; }
+    const track = captureStream.getVideoTracks()[0];
+    const s = track.getSettings ? track.getSettings() : {};
+    el.textContent = (s.width||captureVideo.videoWidth)+'x'+(s.height||captureVideo.videoHeight)+
+      (s.displaySurface ? ', sharing: '+s.displaySurface : '') + (s.frameRate ? ', ~'+Math.round(s.frameRate)+'fps' : '') +
+      ' — label: "'+(track.label||'unknown')+'"';
+  }
+  function resampleForDebug() {
+    updateStreamInfo();
+    const cells = sampleCells();
+    drawSwatches(cells);
+  }
+  debugToggleEl.addEventListener('change', () => {
+    captureDebugEl.hidden = !debugToggleEl.checked;
+    positionRectHandles();
+    if (debugToggleEl.checked) resampleForDebug();
+  });
+  document.getElementById('debugSampleBtn').addEventListener('click', resampleForDebug);
+
+  function renderDebugDiff(scored, usedSquares) {
+    if (!debugToggleEl.checked) return;
+    const section = document.getElementById('debugDiffSection');
+    section.hidden = false;
+    const usedSet = new Set(usedSquares);
+    const tbody = document.querySelector('#debugDiffTable tbody');
+    tbody.innerHTML = '';
+    scored.slice(0, 12).forEach(s => {
+      const tr = document.createElement('tr'); if (usedSet.has(s.sq)) tr.className = 'used';
+      const tdSq = document.createElement('td'); tdSq.textContent = Chess.sqName(s.sq);
+      const tdScore = document.createElement('td'); tdScore.textContent = s.score.toFixed(0);
+      const tdUsed = document.createElement('td'); tdUsed.textContent = usedSet.has(s.sq) ? '✓' : '';
+      tr.appendChild(tdSq); tr.appendChild(tdScore); tr.appendChild(tdUsed);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function setBaseline() {
+    const cells = sampleCells();
+    if (!cells) { setCaptureStatus('No video frame yet — wait a moment and try again.'); debugLog('Set baseline FAILED: no video frame yet (videoWidth/Height still 0).'); return; }
+    captureBaseline = cells;
+    captureCandidatesEl.hidden = true; captureCandidatesEl.innerHTML = '';
+    debugLog('Baseline (re)started manually. Position at this point: ' + (plyHistory.length ? plyHistory.map(p=>p.san).join(' ') : '(start)') + '. Side to move next: ' + (state.turn==='w'?'White':'Black') + '.');
+    // Occupancy alone can't tell whether the flip checkbox matches reality —
+    // the starting position looks the same rotated 180° — but color can:
+    // White's pieces render lighter than Black's on virtually every board
+    // skin. Check now, right when tracking starts, since a wrong flip here
+    // silently mismaps every square until a move exposes it, by which point
+    // several checks may already have failed confusingly.
+    const orientation = CaptureLogic.checkOrientation(cells, captureFlippedEl.checked);
+    if (orientation.verdict === 'mismatch') {
+      // A text warning here was tried first and real usage showed it isn't
+      // enough — it's easy to miss or dismiss, and clicking "Start tracking"
+      // again with the checkbox still wrong just repeats the same warning
+      // while quietly corrupting the tracked game underneath it (occupancy
+      // matching doesn't know the mapping is mirrored, so it keeps finding
+      // "exact" matches that are actually nonsense moves). Since color gives
+      // a genuinely reliable read on which setting is correct, just fix the
+      // checkbox instead of asking the user to notice and act on a message.
+      const wasFlipped = captureFlippedEl.checked;
+      captureFlippedEl.checked = !wasFlipped;
+      const hadHistory = plyHistory.length > 0;
+      setCaptureStatus('Auto-corrected: the board colors show "Captured board is flipped" was set wrong, so it\'s now switched ' + (captureFlippedEl.checked ? 'ON' : 'OFF') + ' for you. Tracking restarts from this frame.' + (hadHistory ? ' Earlier moves in this session were tracked under the wrong setting and may be wrong — click "New game" to get a clean, trustworthy start.' : ''));
+      debugLog('ORIENTATION AUTO-CORRECTED: flipped was ' + wasFlipped + ' (top avg=' + orientation.topB.toFixed(0) + ', bottom avg=' + orientation.bottomB.toFixed(0) + ', which only makes sense with flipped=' + captureFlippedEl.checked + ') — switched automatically rather than just warning, since a warning here was previously ignored across several tracking restarts.' + (hadHistory ? ' WARNING: ' + plyHistory.length + ' ply of history in this session were tracked under the old, wrong setting and are suspect.' : ''));
+    } else {
+      setCaptureStatus('Tracking started. It now compares each check against the last one automatically — no need to re-baseline after every move.');
+      if (orientation.verdict === 'consistent') debugLog('Orientation check: consistent with flipped=' + captureFlippedEl.checked + ' (top avg=' + orientation.topB.toFixed(0) + ', bottom avg=' + orientation.bottomB.toFixed(0) + ').');
+      else debugLog('Orientation check: inconclusive (back rank(s) not clearly read as occupied yet, or too close to call) — could not verify the flip setting from color alone.');
+    }
+    if (debugToggleEl.checked) { updateStreamInfo(); drawSwatches(cells); }
+    if (document.getElementById('autoDetect').checked) armAutoDetect();
+  }
+
+  function runDetection(silent) {
+    debugLog('Detect attempt (' + (silent ? 'auto-poll' : 'manual click') + ')…');
+    if (!captureBaseline) { if (!silent) setCaptureStatus('Click "Set baseline" once to start tracking.'); debugLog('Detect ABORTED: tracking not started yet.'); return; }
+    const cells = sampleCells();
+    if (!cells) { debugLog('Detect ABORTED: no video frame available.'); return; }
+    if (debugToggleEl.checked) { updateStreamInfo(); drawSwatches(cells); }
+    const flipped = captureFlippedEl.checked;
+    const scored = CaptureLogic.diffCells(captureBaseline, cells, flipped);
+    // Roll the comparison point forward to THIS frame regardless of outcome.
+    // Without this, every move that happens between two detect attempts
+    // piles onto one stale baseline, so a diff ends up spanning several
+    // moves at once — which can never match a single legal move. Rolling
+    // forward means each check only ever has to explain what changed since
+    // the last check (normally exactly one move, or nothing).
+    captureBaseline = cells;
+    const totalChange = scored.slice(0, 8).reduce((a, s) => a + s.score, 0);
+    const top3 = scored.slice(0,3).map(s => Chess.sqName(s.sq)+':'+s.score.toFixed(0)).join(', ');
+    if (totalChange < 40) {
+      if (debugToggleEl.checked) renderDebugDiff(scored, []);
+      if (!silent) setCaptureStatus('No clear change detected yet — has the move been played on the shared screen?');
+      debugLog('Result: no significant change (top-8 total=' + totalChange.toFixed(0) + ', threshold=40). Strongest cells: ' + top3 + '.');
+      return false;
+    }
+    const { groups, squares: changed, tier } = CaptureLogic.detectMove(state, scored);
+    if (debugToggleEl.checked) renderDebugDiff(scored, changed);
+    captureCandidatesEl.innerHTML = ''; captureCandidatesEl.hidden = true;
+    debugLog('Change detected (top-8 total=' + totalChange.toFixed(0) + '). Strongest cells: ' + top3 + '. Squares used for matching (tier ' + tier + '): [' + changed.map(Chess.sqName).join(', ') + ']. Legal moves for ' + (state.turn==='w'?'White':'Black') + ' in this app right now: ' + Chess.genLegalMoves(state).length + '.');
+    if (groups.length === 1 && groups[0].length === 1) {
+      const move = groups[0][0];
+      const san = Chess.sanFor(state, move, Chess.genLegalMoves(state));
+      setCaptureStatus('Detected: ' + san);
+      debugLog('MATCHED: ' + san + ' — applying.');
+      doMove(move);
+      return true;
+    } else if (groups.length === 1 && groups[0].length > 1) {
+      setCaptureStatus('Detected a promotion on ' + Chess.sqName(groups[0][0].to) + ' — choose the piece:');
+      debugLog('MATCHED (promotion, ambiguous piece): ' + groups[0].length + ' choices on ' + Chess.sqName(groups[0][0].to) + '. Waiting for user to pick.');
+      captureCandidatesEl.hidden = false;
+      groups[0].forEach(m => {
+        const btn = document.createElement('button'); btn.className = 'btn';
+        btn.textContent = Chess.sanFor(state, m, Chess.genLegalMoves(state));
+        btn.addEventListener('click', () => { captureCandidatesEl.hidden = true; debugLog('User picked promotion candidate: ' + btn.textContent); doMove(m); });
+        captureCandidatesEl.appendChild(btn);
+      });
+      return true;
+    } else if (groups.length > 1) {
+      const names = groups.map(g => Chess.sanFor(state, g[0], Chess.genLegalMoves(state)));
+      setCaptureStatus('A few moves match what changed — pick the right one:');
+      debugLog('AMBIGUOUS: ' + groups.length + ' candidate moves matched the changed squares: [' + names.join(', ') + ']. Waiting for user to pick.');
+      captureCandidatesEl.hidden = false;
+      groups.forEach(g => g.forEach(m => {
+        const btn = document.createElement('button'); btn.className = 'btn';
+        btn.textContent = Chess.sanFor(state, m, Chess.genLegalMoves(state));
+        btn.addEventListener('click', () => { captureCandidatesEl.hidden = true; debugLog('User picked candidate: ' + btn.textContent); doMove(m); });
+        captureCandidatesEl.appendChild(btn);
+      }));
+      return true;
+    } else {
+      if (!silent) setCaptureStatus("Couldn't match a single legal move to what changed — likely more than one move happened between checks (or alignment/orientation is off). Type the missed move below to resync; tracking will pick up cleanly from here.");
+      debugLog('NO MATCH: none of this app\'s ' + Chess.genLegalMoves(state).length + ' legal moves for ' + (state.turn==='w'?'White':'Black') + ' require exactly (or via the top-2 squares) the changed set [' + changed.map(Chess.sqName).join(', ') + ']. Likely more than one move happened in this interval, or alignment/orientation is off. Baseline has still rolled forward to the current frame, so tracking continues from here — type the missed move to resync this app\'s position.');
+      return false;
+    }
+  }
+
+  // "Catch up": for when checks have been sporadic enough that several real
+  // moves piled up between them, which a two-frame diff can never explain on
+  // its own. Reads occupied/empty per cell from the CURRENT frame only (no
+  // comparison to a stale baseline needed) and searches this app's own legal
+  // moves for the short sequence that reproduces that pattern.
+  // `silent`: true for the automatic background fallback (runs continuously
+  // while Auto-detect is on, whenever a plain single-move diff can't explain
+  // what changed). It only ever acts on an EXACT occupancy match — applying
+  // a "best guess" without asking would mean silently gambling on moves
+  // nobody confirmed, which is worse than just waiting for the next tick.
+  // An imperfect or clearly-unrelated result is left for the visible
+  // "Catch up" button to report, since that's a case that genuinely needs a
+  // person to look at it.
+  function runResync(silent) {
+    debugLog('Catch-up (resync) attempt' + (silent ? ' (automatic background check)' : '') + '…');
+    const cells = sampleCells();
+    if (!cells) { if (!silent) { setCaptureStatus('No video frame yet — wait a moment and try again.'); } debugLog('Resync ABORTED: no video frame available.'); return; }
+    if (debugToggleEl.checked) { updateStreamInfo(); drawSwatches(cells); }
+    const flipped = captureFlippedEl.checked;
+    const observed = CaptureLogic.classifyOccupancy(cells);
+    if (!silent) setCaptureStatus('Searching for the sequence of moves that explains the current board… this can take a moment.');
+    debugLog('Resync: classified current frame into occupied/empty per cell, searching up to 4 plies ahead.');
+    // Let the status message paint before the (synchronous, potentially
+    // costly) search runs.
+    setTimeout(() => {
+      const result = CaptureLogic.resyncSearch(state, observed, flipped, 4);
+      if (!result || !result.sequence) {
+        if (!silent) { setCaptureStatus("Couldn't find a matching sequence — try re-checking the alignment box, or type the moves manually below."); }
+        debugLog('Resync FAILED: no candidate sequence found within the search budget.');
+        return;
+      }
+      if (result.distance === 0 && result.depth === 0) {
+        // The app's own position already matches what's on screen exactly —
+        // nothing to catch up on. Reporting this plainly (rather than
+        // forcing the search to invent some move sequence) avoids applying
+        // a spurious "round trip" that only looks like progress.
+        if (!silent) { setCaptureStatus("Already caught up — this app's position matches what's on screen. No move needed."); }
+        debugLog('Resync: observed occupancy already matches this app\'s current position exactly (0 plies) — nothing to apply.');
+        return;
+      }
+      const sequence = result.sequence;
+      if (result.distance > 0) {
+        if (silent) {
+          // Don't guess unattended — just note it and let the next tick, or
+          // the visible "Catch up" button, take another look.
+          debugLog('Resync (background): best candidate at depth ' + result.depth + ' has distance ' + result.distance + ' — not exact, so not auto-applying. Leaving for the next check or a manual "Catch up".');
+          return;
+        }
+        // Not an exact match — report the best guess and let the user decide
+        // whether to trust it rather than silently applying a guess.
+        let s = state, sans = [];
+        for (const m of sequence) { const legal = Chess.genLegalMoves(s); sans.push(Chess.sanFor(s, m, legal)); s = Chess.applyMove(s, m); }
+        // A search this shallow (at most 4 plies) simply cannot reach a
+        // position more than a handful of squares away from where this app
+        // thinks the game is. A large remaining distance almost always means
+        // the shared screen isn't showing a continuation of the same game at
+        // all — a different game was opened, or the app's own position was
+        // never actually in sync with what's on screen — rather than "the
+        // search just didn't try hard enough." Applying a guess in that case
+        // would leave the app equally wrong, just wrong in a new way.
+        if (result.distance > 6) {
+          setCaptureStatus("This doesn't look like a continuation of the same game — the closest match is still " + result.distance + ' squares off, even after considering up to 4 moves. If the shared screen switched to a different game (or a review/analysis page), click "New game" above, get the real game showing and matched from its actual starting position, then "Start tracking" again. If it really is the same game, type the missed moves manually below.');
+          debugLog('Resync: best candidate at depth ' + result.depth + ' has distance ' + result.distance + " — too far off to be a real continuation (likely a different game or an out-of-sync position). NOT offering to apply; suggesting a fresh restart instead. Candidate would have been: [" + sans.join(', ') + '].');
+          captureCandidatesEl.hidden = true;
+          return;
+        }
+        setCaptureStatus('Best guess (not exact — ' + result.distance + ' square' + (result.distance===1?'':'s') + " off): " + sans.join(' ') + '. Apply it below, or type the real moves manually if this looks wrong.');
+        debugLog('Resync: best candidate at depth ' + result.depth + ' has distance ' + result.distance + ' (not exact): [' + sans.join(', ') + ']. Offering as a candidate rather than auto-applying.');
+        captureCandidatesEl.hidden = false; captureCandidatesEl.innerHTML = '';
+        const btn = document.createElement('button'); btn.className = 'btn';
+        btn.textContent = 'Apply: ' + sans.join(' ');
+        btn.addEventListener('click', () => {
+          captureCandidatesEl.hidden = true;
+          sequence.forEach(m => { const legal = Chess.genLegalMoves(state); const san = Chess.sanFor(state, m, legal); debugLog('Resync: applying ' + san + ' (from best-guess sequence).'); doMove(m); });
+          captureBaseline = sampleCells();
+          setCaptureStatus('Applied ' + sans.length + ' move' + (sans.length===1?'':'s') + '. Tracking continues from here.');
+        });
+        captureCandidatesEl.appendChild(btn);
+        return;
+      }
+      // Exact occupancy match: apply the whole sequence and roll tracking
+      // forward. Safe to do unattended too, since "exact" means every one of
+      // the 64 squares came out right — there's nothing to double-check.
+      let sans = [];
+      sequence.forEach(m => { const legal = Chess.genLegalMoves(state); const san = Chess.sanFor(state, m, legal); sans.push(san); debugLog('Resync: applying ' + san + ' (exact match at depth ' + result.depth + ').'); doMove(m); });
+      captureBaseline = sampleCells();
+      setCaptureStatus((silent ? 'Auto-caught up: ' : 'Caught up: ') + sans.join(' ') + '. Tracking continues from here.');
+      debugLog('Resync SUCCESS: applied ' + sans.length + ' move(s) [' + sans.join(', ') + '], exact occupancy match at depth ' + result.depth + '. Baseline reset to current frame.');
+    }, 20);
+  }
+
+  let lastAutoResyncAt = 0;
+  function armAutoDetect() {
+    stopAutoDetect();
+    // This used to stop itself after the very first successful match, which
+    // defeated the whole point of "Auto-detect" — it meant every move after
+    // the first had to be caught manually. It now keeps running for as long
+    // as the checkbox is on. When a plain single-move diff can't explain a
+    // check (typically because more than one move happened between polls),
+    // it also tries an automatic "Catch up" in the background — but only
+    // acts on it when that comes back an EXACT match, and no more often than
+    // every few seconds, since the search is far more expensive than a diff
+    // and there's no reason to redo it every 1.2s while nothing new has
+    // actually landed on screen.
+    autoDetectTimer = setInterval(() => {
+      if (runDetection(true)) return;
+      const now = Date.now();
+      if (now - lastAutoResyncAt < 4000) return;
+      lastAutoResyncAt = now;
+      runResync(true);
+    }, 1200);
+  }
+  function stopAutoDetect() { if (autoDetectTimer) { clearInterval(autoDetectTimer); autoDetectTimer = null; } }
+
+  document.getElementById('captureStartBtn').addEventListener('click', startCapture);
+  document.getElementById('captureStopBtn').addEventListener('click', stopCapture);
+  document.getElementById('setBaselineBtn').addEventListener('click', setBaseline);
+  document.getElementById('detectMoveBtn').addEventListener('click', () => runDetection(false));
+  document.getElementById('resyncBtn').addEventListener('click', () => runResync(false));
+  document.getElementById('recordStartBtn').addEventListener('click', startRecording);
+  document.getElementById('recordStopBtn').addEventListener('click', stopRecording);
+  document.getElementById('recordDownloadBtn').addEventListener('click', downloadRecording);
+  document.getElementById('autoDetect').addEventListener('change', (e) => {
+    debugLog('Auto-detect ' + (e.target.checked ? 'ENABLED' : 'disabled') + '.');
+    if (e.target.checked && captureBaseline) armAutoDetect(); else stopAutoDetect();
+  });
+  captureFlippedEl.addEventListener('change', () => debugLog('Orientation flag changed: captured board is now treated as ' + (captureFlippedEl.checked ? 'FLIPPED (Black at bottom)' : 'not flipped (White at bottom)') + '.'));
+  document.getElementById('manualMoveApply').addEventListener('click', () => {
+    const input = document.getElementById('manualMoveInput');
+    const raw = input.value.trim();
+    if (!raw) return;
+    const wanted = raw.replace(/[+#]/g, '').toLowerCase();
+    const legal = Chess.genLegalMoves(state);
+    const move = legal.find(m => Chess.sanFor(state, m, legal).replace(/[+#]/g, '').toLowerCase() === wanted);
+    if (move) {
+      const san = Chess.sanFor(state, move, legal);
+      setCaptureStatus('Applied: ' + san); input.value = ''; captureCandidatesEl.hidden = true;
+      debugLog('Manual move applied: ' + san + ' (typed as "' + raw + '").');
+      doMove(move);
+    } else {
+      setCaptureStatus('"' + raw + '" isn\'t a legal move right now — check the spelling (e.g. e4, Nf3, Qxf7, O-O).');
+      debugLog('Manual move REJECTED: "' + raw + '" does not match any of this app\'s ' + legal.length + ' legal moves for ' + (state.turn==='w'?'White':'Black') + '.');
+    }
+  });
+  document.getElementById('manualMoveInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('manualMoveApply').click(); });
+
+  /* ================= LEARN TAB ================= */
+  const LEARN_CONTENT = [
+    { level:'Beginner', title:'Learn the rules and basic mates', points:[
+      'Each piece moves differently — pawns push forward and capture diagonally, knights jump in an L-shape, bishops glide diagonally, rooks along ranks and files, and the queen combines both.',
+      'Checkmate the enemy king before yours falls: a king in check must move out of it, block it, or capture the checking piece.',
+      'The three fastest mating patterns to know cold: the back-rank mate, the ladder mate with two rooks, and king-and-queen versus king.',
+      'Opening principle: control the center, develop knights and bishops before your queen, and castle early to protect your king.' ] },
+    { level:'Club Player', title:'Spot tactics before they spot you', points:[
+      'A fork is one piece attacking two enemy pieces at once — knights are especially dangerous forkers.',
+      'A pin immobilizes a piece because moving it would expose something more valuable behind it, often the king.',
+      'A skewer is a pin in reverse: the more valuable piece is in front and forced to move, exposing the piece behind it.',
+      'Before every move, ask: "what does this hang?" and "what is my opponent threatening?" — most games below expert level are decided by overlooked tactics.' ] },
+    { level:'Expert', title:'Think in plans, not just moves', points:[
+      'Evaluate pawn structure: doubled, isolated, and backward pawns are long-term weaknesses worth targeting.',
+      'Trade pieces when ahead in material or when your opponent\'s remaining pieces are more active than yours.',
+      'King safety outweighs material in the middlegame — a material-up position with an exposed king is often losing.',
+      'In the endgame, activate your king as a fighting piece and remember the rule of the square for passed pawns.' ] },
+    { level:'Master', title:'Calculate deeper, prepare a repertoire', points:[
+      'Calculate forcing lines first: checks, captures, and threats, in that order, before considering quiet moves.',
+      'Prophylaxis — improving your position while preventing your opponent\'s best plan — separates strong players from great ones.',
+      'Study classic games move by move and try to predict the next move before looking; this trains pattern recognition faster than solving puzzles alone.',
+      'Build an opening repertoire around plans you understand, not just move memorization, so you can navigate when your opponent deviates.' ] },
+  ];
+  const MOTIF_DIAGRAMS = [
+    { name:'Fork', fen:'q3k3/8/8/1N6/8/8/8/6K1 w - - 0 1', text:'One knight jump on c7 attacks both the king and the queen — the opponent can only save one.' },
+    { name:'Pin', fen:'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3', text:'The bishop on b5 pins the knight on c6 to the black king — the knight cannot legally move.' },
+    { name:'Skewer', fen:'4r3/8/8/4k3/8/8/8/1Q4K1 w - - 0 1', text:'Qe1+ lines up the king and rook on the e-file — the king must move, then the rook falls.' },
+    { name:'Discovered attack', fen:'3r2k1/5ppp/8/8/8/1B6/5PPP/3R2K1 w - - 0 1', text:'Removing the defender with Rxd8+ wins material by force.' },
+  ];
+  const learnGrid = document.getElementById('learnGrid');
+  LEARN_CONTENT.forEach(sec => {
+    const block = document.createElement('div'); block.className='level-block';
+    block.innerHTML = '<div class="level-tag">'+sec.level+'</div><h2>'+sec.title+'</h2>';
+    const ul = document.createElement('ul');
+    sec.points.forEach(p => { const li=document.createElement('li'); li.textContent=p; ul.appendChild(li); });
+    block.appendChild(ul);
+    if (sec.level === 'Club Player') {
+      const mg = document.createElement('div'); mg.className='motif-grid';
+      MOTIF_DIAGRAMS.forEach(m => {
+        const card = document.createElement('div'); card.className='motif-card';
+        const b = document.createElement('div'); b.className='board mini';
+        card.appendChild(b);
+        const text = document.createElement('div'); text.className='motif-text';
+        text.innerHTML = '<h4>'+m.name+'</h4><p>'+m.text+'</p>';
+        card.appendChild(text);
+        mg.appendChild(card);
+        buildBoardSquares(b, 'w', true);
+        paintBoard(b, Chess.fenToState(m.fen), {});
+      });
+      block.appendChild(mg);
+    }
+    learnGrid.appendChild(block);
+  });
+
+  /* ================= STRATEGY TAB ================= */
+  const STRATEGY_CONTENT = [
+    { title:'Opening Principles', points:[
+      'Fight for the center with your pawns (e4/d4 or e5/d5) — central pawns control the most squares and give every other piece more room to work with.',
+      'Develop knights and bishops before moving the same piece twice or bringing your queen out early, where it can be chased around and lose time.',
+      'Castle early, usually within the first ten moves, to tuck your king away and connect your rooks.',
+      'Don\'t grab material or hunt for tricks in the opening at the cost of development — a piece up but three moves behind in development is often no better off.' ] },
+    { title:'Center and Space', points:[
+      'Whoever controls the center (d4, d5, e4, e5 and the squares around them) can swing pieces to either wing faster than their opponent.',
+      'A "space advantage" means your pawns have pushed further up the board, cramping the opponent\'s pieces — but be careful not to over-extend pawns you can no longer defend.',
+      'When you\'re cramped for space, trade off pieces to relieve the pressure; when you have more space, avoid trades that give your opponent\'s pieces more room to breathe.' ] },
+    { title:'Piece Activity & Minor Pieces', points:[
+      'An active piece that controls key squares is worth more than a passive one of the same type sitting on its start square.',
+      'The bishop pair (both bishops vs. bishop-and-knight, or two bishops vs. two knights) is a small long-term asset in open positions, since the two bishops together cover every square on the board.',
+      'A "good" bishop has its own pawns on the opposite color square so it isn\'t blocked by them; a "bad" bishop is boxed in behind its own pawn chain.',
+      'Knights love outposts — squares (often on the 4th/5th rank) that enemy pawns can never attack — while bishops prefer open, unblocked diagonals.' ],
+      diagrams:[
+        { name:'Outpost', fen:'r1bq1rk1/pp3ppp/2n2n2/2bNp3/4P3/3P1N2/PPP2PPP/R1BQR1K1 w - - 0 1', text:'The knight on d5 can never be challenged by a black pawn (there\'s no c- or e-pawn left to do it) — a textbook outpost.' },
+      ] },
+    { title:'Pawn Structure', points:[
+      'Doubled pawns (two pawns on the same file) are usually weaker because they can\'t defend each other and one is often stuck as a target.',
+      'An isolated pawn has no friendly pawn on either neighboring file to defend it, making the square in front of it a permanent weakness too.',
+      'A backward pawn lags behind its neighbors and can\'t safely advance because the square ahead of it is controlled by an enemy pawn.',
+      'A passed pawn has no enemy pawns in front of it on its file or the adjacent files, so nothing but pieces can stop it from queening — push it, and support its advance with your king and pieces in the endgame.' ],
+      diagrams:[
+        { name:'Passed Pawn', fen:'8/8/4k3/8/4P3/8/4K3/8 w - - 0 1', text:'The e4 pawn has no black pawns anywhere on the d-, e-, or f-files to stop it — it\'s passed and just needs escorting home.' },
+        { name:'Doubled Pawns', fen:'4k3/8/8/8/2P5/2P5/8/4K3 w - - 0 1', text:'Two pawns stacked on the c-file can\'t protect one another and give the opponent a fixed target to attack.' },
+        { name:'Isolated Pawn', fen:'4k3/8/8/8/3P4/8/8/4K3 w - - 0 1', text:'With no c- or e-pawn left, the pawn on d4 can never be defended by another pawn — only pieces can guard it.' },
+      ] },
+    { title:'Files, Ranks & Outposts', points:[
+      'An open file (no pawns of either color on it) is prime real estate for a rook — place rooks there to infiltrate the 7th and 8th ranks.',
+      'A half-open file (blocked only by an enemy pawn) is nearly as useful, since your rook or pieces can pile up pressure on that fixed pawn.',
+      'Getting a rook to the opponent\'s 7th rank usually wins pawns and cramps their king, even without other pieces joining in.',
+      'Control key squares before occupying them — a piece heading to an outpost is strongest once all the pawns that could ever attack it are gone.' ],
+      diagrams:[
+        { name:'Open File', fen:'3r2k1/pp3ppp/8/8/8/8/PP3PPP/3R2K1 w - - 0 1', text:'Neither side has a pawn left on the d-file, so both rooks fight for control of it — whoever gets there with more force wins the file.' },
+      ] },
+    { title:'King Safety', points:[
+      'A king caught in the center is a magnet for tactics — open lines toward it are dangerous even if you\'re not down material yet.',
+      'After castling, avoid moving the pawns shielding your king (f/g/h or a/b/c) unless you have a concrete reason — each pawn move creates a permanent hole.',
+      'Keep at least one extra defender near your king when pieces are still on the board; trading off your king\'s defenders can be worth more than winning a pawn.',
+      'In the endgame, the calculus flips: with queens off the board, bring your king to the center — it becomes one of your strongest pieces.' ],
+      diagrams:[
+        { name:'Castled Kings', fen:'r1bq1rk1/ppp2ppp/2n2n2/3pp3/1b2P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 0 1', text:'Both kings are tucked safely behind an intact pawn shield after short castling, with rooks connected and ready to fight for the center.' },
+      ] },
+    { title:'Exchanges & Trading Principles', points:[
+      'When you\'re ahead in material, trade pieces (not pawns) to simplify into a winning endgame — fewer pieces means fewer chances for your opponent to create complications.',
+      'When you\'re behind in material, avoid trades and keep pieces on the board to maximize your chances of a swindle or attack.',
+      'Trade off your opponent\'s best-placed piece even at the cost of your own good piece — removing their most active attacker is often worth more than the piece itself.',
+      'Don\'t trade your active pieces for your opponent\'s passive ones without good reason; you\'re giving up your advantage for free.' ] },
+    { title:'Initiative, Tempo & Prophylaxis', points:[
+      'The initiative means forcing your opponent to react to your threats instead of carrying out their own plan — it\'s often worth a pawn or more to keep it.',
+      'A tempo is a "move" of relative time; wasting one (an unnecessary piece move, a premature attack that gets repelled) can let your opponent catch up or seize the initiative themselves.',
+      'Prophylaxis means asking "what does my opponent want to do?" and playing a move that prevents it, even while improving your own position.',
+      'Before attacking, make sure your own king and position are safe first — an attack that fails often leaves you worse off than before you started.' ] },
+    { title:'Endgame Principles', points:[
+      'Activate your king — in the endgame it is a strong fighting piece and belongs in the center or wherever the action is, not tucked away in the corner.',
+      'The "rule of the square": a king can catch an enemy passed pawn if it can step inside the square drawn from the pawn to its queening square; if it can\'t, the pawn queens by force.',
+      'Opposition (kings facing each other with one square between them) decides who is forced to give ground first in king-and-pawn endgames — the side NOT forced to move usually wins the key square.',
+      'Rooks belong behind passed pawns — behind your own to support their advance, and behind the opponent\'s to hold it back — a principle strong enough to be called a "law" in rook endgames.' ] },
+  ];
+  const strategyGrid = document.getElementById('strategyGrid');
+  STRATEGY_CONTENT.forEach(sec => {
+    const block = document.createElement('div'); block.className='level-block';
+    block.innerHTML = '<h2>'+sec.title+'</h2>';
+    const ul = document.createElement('ul');
+    sec.points.forEach(p => { const li=document.createElement('li'); li.textContent=p; ul.appendChild(li); });
+    block.appendChild(ul);
+    if (sec.diagrams && sec.diagrams.length) {
+      const mg = document.createElement('div'); mg.className='motif-grid';
+      sec.diagrams.forEach(m => {
+        const card = document.createElement('div'); card.className='motif-card';
+        const b = document.createElement('div'); b.className='board mini';
+        card.appendChild(b);
+        const text = document.createElement('div'); text.className='motif-text';
+        text.innerHTML = '<h4>'+m.name+'</h4><p>'+m.text+'</p>';
+        card.appendChild(text);
+        mg.appendChild(card);
+        buildBoardSquares(b, 'w', true);
+        paintBoard(b, Chess.fenToState(m.fen), {});
+      });
+      block.appendChild(mg);
+    }
+    strategyGrid.appendChild(block);
+  });
+
+  /* ================= PUZZLES TAB ================= */
+  const puzzleListEl = document.getElementById('puzzleList');
+  const puzzleBoardEl = document.getElementById('puzzleBoard');
+  const puzzleIntroEl = document.getElementById('puzzleIntro');
+  const puzzleFeedbackEl = document.getElementById('puzzleFeedback');
+  let puzzleIdx = 0, puzzleState = null, puzzleSelected = null, puzzleSolved = new Set(JSON.parse(loadPref('puzzlesSolved','[]')));
+  buildBoardSquares(puzzleBoardEl, 'w', false);
+
+  function stripSuffix(s) { return s.replace('+','').replace('#',''); }
+
+  function renderPuzzleList() {
+    puzzleListEl.innerHTML = '';
+    PUZZLES.forEach((pz, i) => {
+      const btn = document.createElement('button'); btn.className='puzzle-item' + (i===puzzleIdx?' active':'') + (puzzleSolved.has(pz.id)?' solved':'');
+      btn.innerHTML = '<span class="tag">'+pz.level+' · '+pz.motif+'</span><span class="name">Puzzle '+(i+1)+'</span>';
+      btn.addEventListener('click', () => loadPuzzle(i));
+      puzzleListEl.appendChild(btn);
+    });
+  }
+  function loadPuzzle(i) {
+    puzzleIdx = i; const pz = PUZZLES[i];
+    puzzleState = Chess.fenToState(pz.fen);
+    puzzleSelected = null;
+    puzzleIntroEl.textContent = pz.intro;
+    puzzleFeedbackEl.className = 'puzzle-feedback'; puzzleFeedbackEl.textContent='';
+    renderPuzzleList();
+    renderPuzzleBoard();
+  }
+  function puzzleDestinationsFor(sq) {
+    const legal = Chess.genLegalMoves(puzzleState).filter(m => m.from===sq);
+    const seen = new Map();
+    legal.forEach(m => { if (!seen.has(m.to)) seen.set(m.to, { to:m.to, capture: !!m.captured }); });
+    return Array.from(seen.values());
+  }
+  function renderPuzzleBoard(extra) {
+    paintBoard(puzzleBoardEl, puzzleState, Object.assign({
+      selected: puzzleSelected,
+      destinations: puzzleSelected!=null ? puzzleDestinationsFor(puzzleSelected) : [],
+    }, extra||{}));
+  }
+  puzzleBoardEl.addEventListener('click', (e) => {
+    const cell = e.target.closest('.sq'); if (!cell) return;
+    const s = Number(cell.dataset.sq);
+    const pz = PUZZLES[puzzleIdx];
+    if (puzzleSelected != null) {
+      const dest = puzzleDestinationsFor(puzzleSelected).find(d => d.to===s);
+      if (dest) {
+        const legal = Chess.genLegalMoves(puzzleState).filter(m => m.from===puzzleSelected && m.to===s);
+        const move = legal[0];
+        const san = stripSuffix(Chess.sanFor(puzzleState, move, Chess.genLegalMoves(puzzleState)));
+        const wanted = stripSuffix(pz.solution[0]);
+        if (san === wanted) {
+          puzzleState = Chess.applyMove(puzzleState, move);
+          puzzleSolved.add(pz.id); savePref('puzzlesSolved', JSON.stringify(Array.from(puzzleSolved)));
+          puzzleFeedbackEl.className = 'puzzle-feedback show correct';
+          const info = Coach.explainMove(Chess.fenToState(pz.fen), move);
+          puzzleFeedbackEl.textContent = 'Correct! ' + info.headline;
+          renderPuzzleList();
+        } else {
+          puzzleFeedbackEl.className = 'puzzle-feedback show wrong';
+          puzzleFeedbackEl.textContent = 'Not quite — that move doesn\'t solve the puzzle. Try again.';
+        }
+        puzzleSelected = null; renderPuzzleBoard(); return;
+      }
+    }
+    const piece = puzzleState.board[s];
+    if (piece && ((puzzleState.turn==='w')===Chess.isWhite(piece))) puzzleSelected = (puzzleSelected===s)?null:s; else puzzleSelected=null;
+    renderPuzzleBoard();
+  });
+  document.getElementById('puzzleRetry').addEventListener('click', () => loadPuzzle(puzzleIdx));
+  document.getElementById('puzzleSolution').addEventListener('click', () => {
+    const pz = PUZZLES[puzzleIdx];
+    const legal = Chess.genLegalMoves(puzzleState);
+    const wanted = stripSuffix(pz.solution[0]);
+    const move = legal.find(m => stripSuffix(Chess.sanFor(puzzleState, m, legal)) === wanted);
+    if (move) { renderPuzzleBoard({ hintFrom: move.from, hintTo: move.to });
+      const info = Coach.explainMove(puzzleState, move);
+      puzzleFeedbackEl.className = 'puzzle-feedback show correct';
+      puzzleFeedbackEl.textContent = 'Solution: ' + info.headline;
+    }
+  });
+  loadPuzzle(0);
+
+  /* ================= LESSONS TAB ================= */
+  const lessonListEl = document.getElementById('lessonList');
+  const lessonBoardEl = document.getElementById('lessonBoard');
+  const lessonCaptionEl = document.getElementById('lessonCaption');
+  const lessonTakeawayEl = document.getElementById('lessonTakeaway');
+  const lessonProgressFillEl = document.getElementById('lessonProgressFill');
+  const lessonProgressLabelEl = document.getElementById('lessonProgressLabel');
+  buildBoardSquares(lessonBoardEl, 'w', false);
+
+  let lessonIdx = 0, lessonFrames = [], frameIdx = 0, lessonTimer = null, lessonWatched = new Set(JSON.parse(loadPref('lessonsWatched','[]')));
+
+  function stripLessonSuffix(s) { return s.replace(/[+#]/g, ''); }
+
+  function buildFrames(lesson) {
+    let state = lesson.startFen ? Chess.fenToState(lesson.startFen) : Chess.newGame();
+    const frames = [{ state, caption: lesson.steps[0].caption, lastMove: null, takeaway: lesson.steps[0].takeaway || null }];
+    for (let i = 1; i < lesson.steps.length; i++) {
+      const step = lesson.steps[i];
+      if (step.move) {
+        const wanted = stripLessonSuffix(step.move);
+        const legal = Chess.genLegalMoves(state);
+        const match = legal.find(m => stripLessonSuffix(Chess.sanFor(state, m, legal)) === wanted);
+        if (match) { state = Chess.applyMove(state, match); frames.push({ state, caption: step.caption, lastMove: { from: match.from, to: match.to }, takeaway: step.takeaway || null }); continue; }
+      }
+      frames.push({ state, caption: step.caption, lastMove: frames[frames.length-1].lastMove, takeaway: step.takeaway || null });
+    }
+    return frames;
+  }
+
+  function renderLessonList() {
+    lessonListEl.innerHTML = '';
+    LESSONS.forEach((lesson, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'puzzle-item' + (i===lessonIdx?' active':'') + (lessonWatched.has(lesson.id)?' solved':'');
+      btn.innerHTML = '<span class="tag">'+lesson.level+' &middot; <span class="mins">'+lesson.minutes+' min</span></span><span class="name">'+lesson.title+'</span>';
+      btn.title = lesson.summary;
+      btn.addEventListener('click', () => loadLesson(i));
+      lessonListEl.appendChild(btn);
+    });
+  }
+
+  function renderFrame() {
+    const frame = lessonFrames[frameIdx];
+    const checkSq = Chess.gameStatus(frame.state).check ? Chess.findKing(frame.state.board, frame.state.turn) : null;
+    paintBoard(lessonBoardEl, frame.state, { lastMove: frame.lastMove, checkSq });
+    lessonCaptionEl.textContent = frame.caption;
+    if (frame.takeaway) { lessonTakeawayEl.hidden = false; lessonTakeawayEl.textContent = '💡 ' + frame.takeaway; } else { lessonTakeawayEl.hidden = true; }
+    lessonProgressFillEl.style.width = (lessonFrames.length<=1 ? 100 : (frameIdx/(lessonFrames.length-1))*100) + '%';
+    lessonProgressLabelEl.textContent = 'Step ' + (frameIdx+1) + ' of ' + lessonFrames.length;
+    if (frameIdx === lessonFrames.length - 1) {
+      lessonWatched.add(LESSONS[lessonIdx].id);
+      savePref('lessonsWatched', JSON.stringify(Array.from(lessonWatched)));
+      renderLessonList();
+      stopLessonPlayback();
+    }
+  }
+
+  function loadLesson(i) {
+    lessonIdx = i; const lesson = LESSONS[i];
+    lessonFrames = buildFrames(lesson); frameIdx = 0;
+    stopLessonPlayback();
+    renderLessonList();
+    renderFrame();
+  }
+
+  function stepLesson(delta) {
+    stopLessonPlayback();
+    frameIdx = Math.max(0, Math.min(lessonFrames.length - 1, frameIdx + delta));
+    renderFrame();
+  }
+
+  function startLessonPlayback() {
+    if (frameIdx >= lessonFrames.length - 1) frameIdx = 0;
+    document.getElementById('lessonPlayPause').textContent = 'Pause';
+    lessonTimer = setInterval(() => {
+      if (frameIdx >= lessonFrames.length - 1) { stopLessonPlayback(); return; }
+      frameIdx++; renderFrame();
+    }, 2200);
+  }
+  function stopLessonPlayback() {
+    if (lessonTimer) { clearInterval(lessonTimer); lessonTimer = null; }
+    document.getElementById('lessonPlayPause').textContent = 'Play';
+  }
+
+  document.getElementById('lessonPlayPause').addEventListener('click', () => { lessonTimer ? stopLessonPlayback() : startLessonPlayback(); });
+  document.getElementById('lessonPrev').addEventListener('click', () => stepLesson(-1));
+  document.getElementById('lessonNext').addEventListener('click', () => stepLesson(1));
+  document.getElementById('lessonRestart').addEventListener('click', () => { stopLessonPlayback(); frameIdx = 0; renderFrame(); });
+
+  loadLesson(0);
+
+  /* ---- hot reload continuity for viewers already on the page ---- */
+  try {
+    window.claude && window.claude.hot && window.claude.hot.snapshot && window.claude.hot.snapshot(() => ({
+      level: levelSelect.value, autoCoach: autoCoach.checked,
+    }));
+  } catch(e) {}
+})();
+</script>
