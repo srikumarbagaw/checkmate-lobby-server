@@ -80,6 +80,11 @@ button{font-family:var(--font-body);}
 .tab.active{background:var(--accent); color:var(--accent-ink);}
 .tab:not(.active):hover{color:var(--ink);}
 .tab:focus-visible, button:focus-visible, .sq:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.rbx-hub-reopen{
+  background:linear-gradient(180deg, #00A2FF, #0089DB); border:none; color:#fff; font-weight:800;
+  border-radius:999px; padding:9px 18px; box-shadow:0 4px 0 #0089DB;
+}
+.rbx-hub-reopen:hover{transform:translateY(-1px);}
 
 /* ---------- Screen capture panel ---------- */
 .capture-panel{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:14px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px;}
@@ -423,6 +428,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
       <button class="tab" data-tab="lessons" role="tab" aria-selected="false">Lessons</button>
       <button class="tab" data-tab="puzzles" role="tab" aria-selected="false">Puzzles</button>
     </nav>
+    <button class="btn rbx-hub-reopen" id="gameHubBtn" type="button" title="Open the Game Hub to play online">🎮 Game Hub</button>
   </header>
 
   <main>
@@ -435,7 +441,6 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
               <option value="engine" selected>Vs. computer</option>
               <option value="manual">You move both sides</option>
               <option value="capture">Capture opponent's move (screen)</option>
-              <option value="online">Play online (lobby)</option>
             </select>
             <select id="colorSelect" class="btn" aria-label="Play as">
               <option value="w" selected>Play as White</option>
@@ -448,11 +453,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
               <option value="master">Master opponent</option>
             </select>
             <button class="btn" id="configureCaptureBtn" hidden>Configure capture</button>
-            <button class="btn" id="configureOnlineBtn" hidden>Online lobby</button>
             <button class="btn btn-primary" id="newGameBtn">New game</button>
-            <button class="btn" id="undoBtn">Undo</button>
-            <button class="btn" id="flipBtn">Flip board</button>
-            <button class="btn" id="hintBtn">Hint</button>
             <label class="toggle-row" id="autoCoachRow"><input type="checkbox" id="autoCoach" checked> Always show best move</label>
           </div>
 
@@ -2849,6 +2850,11 @@ var LESSONS = [
   const autoCoach = document.getElementById('autoCoach');
   levelSelect.value = loadPref('level', 'club');
   modeSelect.value = loadPref('mode', 'engine');
+  // A saved 'online' pref from before online play moved to the Game Hub
+  // gate (which sets mode programmatically, not through this dropdown) no
+  // longer matches any <option> here — fall back to the default rather than
+  // leaving the select showing nothing chosen.
+  if (modeSelect.selectedIndex === -1) modeSelect.value = 'engine';
   colorSelect.value = loadPref('playAs', 'w');
   autoCoach.checked = loadPref('autoCoach', '1') === '1';
 
@@ -2859,7 +2865,6 @@ var LESSONS = [
   buildBoardSquares(playBoardEl, orientation, false);
   const configureCaptureBtn = document.getElementById('configureCaptureBtn');
   const capturePanel = document.getElementById('capturePanel');
-  const configureOnlineBtn = document.getElementById('configureOnlineBtn');
   const onlinePanel = document.getElementById('onlinePanel');
   const autoCoachRow = document.getElementById('autoCoachRow');
   function applyModeVisibility() {
@@ -2867,8 +2872,11 @@ var LESSONS = [
     levelSelect.hidden = mode !== 'engine';
     configureCaptureBtn.hidden = mode !== 'capture';
     if (mode !== 'capture') capturePanel.hidden = true;
-    configureOnlineBtn.hidden = mode !== 'online';
     onlinePanel.hidden = mode !== 'online';
+    // There's no dropdown option for online mode any more — the Game Hub
+    // gate is the only way in — so the dropdown itself has nothing useful to
+    // show while a game is online; hide it rather than leave it blank.
+    modeSelect.hidden = mode === 'online';
     // Engine assistance during a real match against another person isn't a
     // coaching tool anymore, it's just cheating your opponent — so the
     // "always show best move" toggle only exists outside online play.
@@ -3108,15 +3116,6 @@ var LESSONS = [
     startNewGame();
     if (mode === 'online' && onlineInGame) onlineSend({ t: 'newgame' });
   });
-  document.getElementById('undoBtn').addEventListener('click', () => {
-    if (!undoStack.length) return;
-    // In engine mode, undo back to the last time it was the human's turn.
-    // In manual mode (you move both sides), a single step back is enough.
-    let s = undoStack.pop(); plyHistory.pop();
-    if (mode === 'engine') { while (undoStack.length && s.turn !== humanColor) { s = undoStack.pop(); plyHistory.pop(); } }
-    state = s; selected=null; hint=null; gameOver=false; showFeedback(null);
-    render();
-  });
   modeSelect.addEventListener('change', () => {
     if (mode === 'capture' && typeof stopCapture === 'function') stopCapture();
     if (mode === 'online') resetOnlineConnection();
@@ -3127,23 +3126,11 @@ var LESSONS = [
     startNewGame();
   });
   configureCaptureBtn.addEventListener('click', () => { capturePanel.hidden = !capturePanel.hidden; if (typeof debugLog === 'function') debugLog('Capture panel ' + (capturePanel.hidden ? 'closed' : 'opened') + '.'); });
-  // Reopens the landing gate (e.g. to change name/server, or reconnect after
-  // a drop) without disturbing an already-connected session underneath it.
-  configureOnlineBtn.addEventListener('click', () => { onlineConnectStep.hidden = false; });
   colorSelect.addEventListener('change', () => {
     humanColor = colorSelect.value; savePref('playAs', humanColor);
     orientation = humanColor;
     buildBoardSquares(playBoardEl, orientation, false);
     startNewGame();
-  });
-  document.getElementById('flipBtn').addEventListener('click', () => {
-    orientation = orientation === 'w' ? 'b' : 'w';
-    buildBoardSquares(playBoardEl, orientation, false);
-    render();
-  });
-  document.getElementById('hintBtn').addEventListener('click', () => {
-    const { move: best } = Chess.searchBest(state, COACH_DEPTH);
-    if (best) { hint = { from: best.from, to: best.to }; renderCoach(); }
   });
   levelSelect.addEventListener('change', () => savePref('level', levelSelect.value));
   autoCoach.addEventListener('change', () => { savePref('autoCoach', autoCoach.checked?'1':'0'); renderCoach(); });
@@ -3159,6 +3146,10 @@ var LESSONS = [
   // a full-screen front door instead of an inline row.
   const onlineConnectStep = document.getElementById('welcomeGate');
   const playOfflineBtn = document.getElementById('playOfflineBtn');
+  // The only way to (re)open the gate now — there's no toolbar toggle or
+  // dropdown option for online mode any more, just this one header button.
+  const gameHubBtn = document.getElementById('gameHubBtn');
+  if (gameHubBtn) gameHubBtn.addEventListener('click', () => { onlineConnectStep.hidden = false; });
   const onlineLobbyStep = document.getElementById('onlineLobbyStep');
   const onlineGameStep = document.getElementById('onlineGameStep');
   const onlineNameInput = document.getElementById('onlineNameInput');
