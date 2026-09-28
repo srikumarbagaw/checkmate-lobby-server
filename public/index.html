@@ -297,18 +297,20 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
 .sq.dest-capture::before{content:"";position:absolute;inset:6%;border-radius:50%;box-shadow:0 0 0 4px var(--dest-ring) inset;}
 .sq.dest-capture.risky::before{box-shadow:0 0 0 4px var(--dest-risky) inset;}
 .hint-arrow-layer{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:5; overflow:visible;}
-/* Who-you're-playing status: an overlay badge sitting on the board itself
-   (top-left corner) instead of its own full-width row above it. Solid
-   (non-transparent) background so it stays legible without washing out or
-   fighting with the squares/pieces underneath it. */
-.board-status-badge{
-  position:absolute; top:10px; left:10px; z-index:6; max-width:calc(100% - 20px);
-  background:var(--surface); border:1px solid var(--border); border-radius:10px;
-  padding:6px 12px; box-shadow:0 6px 18px -6px rgba(0,0,0,.35);
-  font-family:var(--font-mono); font-size:.8rem; color:var(--ink-dim);
-  pointer-events:none;
+/* Chess.com-style player bars: name at the left, above and below the board,
+   whichever side's turn it is gets highlighted. Plain rows in the normal
+   layout (not overlaid on the squares), solid background either way. */
+.player-bar{
+  display:flex; align-items:center; justify-content:flex-start;
+  padding:7px 12px; border-radius:8px; margin-bottom:6px;
+  background:var(--surface-2); border:1px solid var(--border);
+  transition:background .15s, border-color .15s;
 }
-.board-status-badge[hidden]{display:none !important;}
+.player-bar:last-of-type{margin-bottom:0; margin-top:6px;}
+.player-bar-name{font-weight:600; font-size:.9rem; color:var(--ink-dim);}
+.player-bar.active-turn{background:var(--accent); border-color:var(--accent-strong);}
+.player-bar.active-turn .player-bar-name{color:var(--accent-ink);}
+.player-bar[hidden]{display:none !important;}
 .hint-arrow-layer .hint-arrow-shaft{stroke:var(--hint-arrow); fill:none; stroke-linecap:butt; stroke-linejoin:miter; opacity:.82;}
 .hint-arrow-layer .hint-arrow-head{fill:var(--hint-arrow); opacity:.82;}
 .sq .coord{position:absolute; font-family:var(--font-mono); font-size:.78rem; font-weight:700; color:var(--ink-dim); opacity:.75; pointer-events:none;}
@@ -586,12 +588,15 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
           </div>
 
           <div class="board-shell">
+            <div class="player-bar" id="playerBarTop">
+              <span class="player-bar-name" id="playerNameTop">Opponent</span>
+            </div>
             <div class="board-frame">
               <div class="board" id="playBoard"></div>
               <svg class="hint-arrow-layer" id="hintArrowLayer" viewBox="0 0 100 100"></svg>
-              <div class="board-status-badge" id="onlineGameStep" hidden>
-                <span id="onlineGameStatus"></span>
-              </div>
+            </div>
+            <div class="player-bar" id="playerBarBottom">
+              <span class="player-bar-name" id="playerNameBottom">You</span>
             </div>
             <div class="eval-row">
               <span>W</span>
@@ -2921,6 +2926,7 @@ var LESSONS = [
     renderMoveList();
     renderEval();
     renderStatusLine(status);
+    updatePlayerBars();
     if (!status.over) renderCoach(); else renderGameOver(status);
     const posInfoEl = document.getElementById('debugPositionInfo');
     if (posInfoEl) {
@@ -2939,6 +2945,44 @@ var LESSONS = [
     const side = state.turn === 'w' ? 'White' : 'Black';
     const whoTag = mode === 'manual' ? ' (your move)' : (state.turn===humanColor ? ' (you)' : ' (opponent)');
     el.textContent = side + ' to move' + (status.check ? ' — in check' : '') + whoTag;
+  }
+
+  // Chess.com-style player bars above/below the board: name on each side,
+  // whichever one's turn it is gets highlighted. The bottom bar is always
+  // "my" side (matching board orientation); the top bar is whoever/whatever
+  // is across the board — the engine, the other manual-mode color, a
+  // captured-from-the-screen opponent, or a real online opponent's name.
+  function updatePlayerBars() {
+    if (mode === 'online' && !onlineInGame) {
+      playerBarTop.hidden = true;
+      playerBarBottom.hidden = true;
+      return;
+    }
+    playerBarTop.hidden = false;
+    playerBarBottom.hidden = false;
+
+    const bottomColor = orientation;
+    const topColor = orientation === 'w' ? 'b' : 'w';
+    let topLabel, bottomLabel;
+    if (mode === 'online') {
+      topLabel = onlineOpponentName || 'Opponent';
+      bottomLabel = onlineMyName || 'You';
+    } else if (mode === 'manual') {
+      topLabel = topColor === 'w' ? 'White' : 'Black';
+      bottomLabel = bottomColor === 'w' ? 'White' : 'Black';
+    } else if (mode === 'capture') {
+      topLabel = 'Opponent (captured moves)';
+      bottomLabel = 'You';
+    } else {
+      topLabel = 'Computer';
+      bottomLabel = 'You';
+    }
+    playerNameTop.textContent = topLabel;
+    playerNameBottom.textContent = bottomLabel;
+
+    const activeColor = state.turn;
+    playerBarTop.classList.toggle('active-turn', activeColor === topColor);
+    playerBarBottom.classList.toggle('active-turn', activeColor === bottomColor);
   }
 
   function renderEval() {
@@ -3159,7 +3203,6 @@ var LESSONS = [
   const gameHubBtn = document.getElementById('gameHubBtn');
   if (gameHubBtn) gameHubBtn.addEventListener('click', () => { onlineConnectStep.hidden = false; });
   const onlineLobbyStep = document.getElementById('onlineLobbyStep');
-  const onlineGameStep = document.getElementById('onlineGameStep');
   const onlineNameInput = document.getElementById('onlineNameInput');
   const onlineServerInput = document.getElementById('onlineServerInput');
   const onlineConnectBtn = document.getElementById('onlineConnectBtn');
@@ -3171,8 +3214,12 @@ var LESSONS = [
   const onlineChatLog = document.getElementById('onlineChatLog');
   const onlineChatInput = document.getElementById('onlineChatInput');
   const onlineChatSendBtn = document.getElementById('onlineChatSendBtn');
-  const onlineGameStatus = document.getElementById('onlineGameStatus');
   const onlineLeaveBtn = document.getElementById('onlineLeaveBtn');
+  const playerBarTop = document.getElementById('playerBarTop');
+  const playerBarBottom = document.getElementById('playerBarBottom');
+  const playerNameTop = document.getElementById('playerNameTop');
+  const playerNameBottom = document.getElementById('playerNameBottom');
+  let onlineOpponentName = '';
 
   function defaultOnlineServerUrl() {
     if (location.protocol === 'file:') return '';
@@ -3202,11 +3249,10 @@ var LESSONS = [
   function onlineShowStep(step) {
     onlineConnectStep.hidden = step !== 'connect';
     onlineLobbyStep.hidden = step === 'connect';
-    onlineGameStep.hidden = step !== 'game';
-    // "Leave game" lives in the header now, alongside New game/Game Hub,
-    // rather than inside #onlineGameStep, so it's toggled separately.
+    // "Leave game" lives in the header, alongside New game/Game Hub.
     onlineLeaveBtn.hidden = step !== 'game';
     setHubSidebarVisible(step !== 'connect');
+    updatePlayerBars();
   }
 
   function onlineSend(msg) {
@@ -3271,8 +3317,8 @@ var LESSONS = [
     } else if (msg.t === 'gameStart') {
       onlineInGame = true; onlineHostingGameId = null;
       humanColor = msg.color; orientation = msg.color;
+      onlineOpponentName = msg.opponent;
       buildBoardSquares(playBoardEl, orientation, false);
-      onlineGameStatus.textContent = 'Playing ' + (msg.color === 'w' ? 'White' : 'Black') + ' vs ' + msg.opponent + '.';
       onlineShowStep('game');
       startNewGame();
     } else if (msg.t === 'joinedRoom') {
@@ -3297,7 +3343,7 @@ var LESSONS = [
       }
     } else if (msg.t === 'opponentLeft') {
       onlineInGame = false;
-      onlineGameStatus.textContent = 'Your opponent left the game.';
+      playerNameTop.textContent = 'Opponent left the game';
       setTimeout(() => { onlineShowStep('lobby'); }, 1200);
     } else if (msg.t === 'error') {
       setOnlineStatus(msg.message);
