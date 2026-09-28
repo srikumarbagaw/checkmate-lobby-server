@@ -96,21 +96,26 @@ button{font-family:var(--font-body);}
 .lobby-empty{color:var(--ink-dim); font-style:italic; background:none !important;}
 .lobby-chat-log{height:160px; overflow-y:auto; background:var(--surface-2); border-radius:8px; padding:8px; font-size:.85rem; display:flex; flex-direction:column; gap:4px;}
 .lobby-chat-msg strong{color:var(--accent);}
-/* "Peek at lobby" drawer: while a 304 table is on screen (its own
-   full-viewport overlay sits at z-index:1000), this same #onlineLobbyStep
-   element can be lifted above it as a floating panel, without touching its
-   normal in-flow layout when a 304 table isn't active. */
-#onlineLobbyStep.lobby-peek-drawer{
-  position:fixed; top:0; right:0; height:100vh; width:min(380px, 92vw);
-  z-index:2000; margin:0; padding:16px 16px 20px; overflow-y:auto;
-  background:var(--surface); border-left:1px solid var(--border);
-  box-shadow:-12px 0 32px rgba(0,0,0,.45);
+/* Game Hub sidebar: once connected to the online lobby, #onlineLobbyStep is
+   always shown expanded as a fixed left-hand sidebar — for every game, not
+   just while browsing the lobby — rather than a togglable drawer. The rest
+   of the page (and #card304Root's full-viewport overlay) makes room for it
+   via body.rbx-hub-open / #card304Root.with-hub below. */
+#onlineLobbyStep{
+  position:fixed; top:0; left:0; height:100vh; width:340px; max-width:88vw;
+  z-index:2000; margin:0; padding:18px 16px 20px; overflow-y:auto;
+  border-right:1px solid #E4E8EF;
+  box-shadow:12px 0 32px rgba(0,0,0,.16);
 }
-#onlineLobbyStep.lobby-peek-drawer .lobby-grid{grid-template-columns:1fr; margin-top:0;}
-.lobby-peek-backdrop{position:fixed; inset:0; z-index:1999; background:rgba(0,0,0,.35);}
-.lobby-peek-close{width:100%; margin-bottom:4px;}
-#lobbyPeekToggleBtn{position:fixed; top:14px; right:14px; z-index:2001; box-shadow:0 4px 16px rgba(0,0,0,.35);}
-#lobbyPeekToggleBtn[hidden]{display:none !important;}
+#onlineLobbyStep .lobby-grid{grid-template-columns:1fr; margin-top:0;}
+#onlineLobbyStep[hidden]{display:none !important;}
+body.rbx-hub-open{padding-left:356px;}
+#card304Root.with-hub{left:340px;}
+@media (max-width:900px){
+  body.rbx-hub-open{padding-left:16px;}
+  #card304Root.with-hub{left:0;}
+  #onlineLobbyStep{width:min(340px, 88vw); box-shadow:12px 0 40px rgba(0,0,0,.35);}
+}
 
 /* ---------- Roblox-style game hub redesign for the online lobby ---------- */
 .rbx-lobby{
@@ -118,10 +123,17 @@ button{font-family:var(--font-body);}
   --rbx-ink:#1C1E21; --rbx-dim:#6B7280;
   --rbx-blue:#00A2FF; --rbx-blue-dark:#0089DB;
   --rbx-green:#00B67A; --rbx-red:#FF3B5C;
-  background:var(--rbx-bg) !important; border:1px solid var(--rbx-line) !important;
-  border-radius:18px !important; box-shadow:0 16px 40px -18px rgba(20,24,34,.35) !important;
-  color:var(--rbx-ink); padding:18px !important;
+  color:var(--rbx-ink);
 }
+/* The rounded "card" look, for the small connect/status panel (#onlinePanel)
+   which stays in normal document flow — NOT applied to the Game Hub sidebar
+   itself, which has its own full-height, edge-to-edge look below. */
+.rbx-lobby.rbx-panel-card{
+  background:var(--rbx-bg); border:1px solid var(--rbx-line);
+  border-radius:18px; box-shadow:0 16px 40px -18px rgba(20,24,34,.35);
+  padding:18px;
+}
+#onlineLobbyStep.rbx-lobby{background:var(--rbx-bg);}
 .rbx-lobby .capture-hint{color:var(--rbx-dim);}
 .rbx-lobby .capture-status{color:var(--rbx-dim);}
 .rbx-lobby input.btn{background:#fff; border:1px solid var(--rbx-line); color:var(--rbx-ink); border-radius:10px; font-weight:500;}
@@ -465,7 +477,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
           </div>
 
-          <div class="capture-panel rbx-lobby" id="onlinePanel" hidden>
+          <div class="capture-panel rbx-lobby rbx-panel-card" id="onlinePanel" hidden>
             <div id="onlineConnectStep">
               <p class="capture-hint">Enter your name and connect to the lobby to see who's online, chat, and start or join a game.</p>
               <div class="capture-row">
@@ -476,46 +488,51 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
               <p class="capture-status" id="onlineStatus">Not connected.</p>
             </div>
 
-            <div id="onlineLobbyStep" hidden>
-              <div class="rbx-hub-header">
-                <div class="rbx-hub-title"><span class="emoji">🎮</span> Game Hub</div>
-                <span class="rbx-online-badge"><span class="rbx-online-dot"></span><span id="onlineCountBadge">0 online</span></span>
-              </div>
-              <div class="lobby-grid">
-                <div class="lobby-col">
-                  <div class="lobby-section-title">Online now</div>
-                  <ul class="lobby-list" id="onlineUsersList"></ul>
-                  <div class="lobby-section-title">Host a game</div>
-                  <div class="rbx-create-row">
-                    <button class="btn btn-primary rbx-create-card" id="onlineHostChessBtn">
-                      <span class="rbx-create-icon">♟️</span>
-                      <span class="rbx-create-label">Host Chess</span>
-                      <span class="rbx-create-sub">1v1 · classic rules</span>
-                    </button>
-                    <button class="btn btn-primary rbx-create-card" id="onlineHost304Btn">
-                      <span class="rbx-create-icon">🃏</span>
-                      <span class="rbx-create-label">Host 304 Table</span>
-                      <span class="rbx-create-sub">Up to 4 players</span>
-                    </button>
-                  </div>
-                  <div class="lobby-section-title">Open games</div>
-                  <ul class="lobby-list" id="onlineGamesList"></ul>
-                </div>
-                <div class="lobby-col">
-                  <div class="lobby-section-title">Chat</div>
-                  <div class="lobby-chat-log" id="onlineChatLog"></div>
-                  <div class="capture-row">
-                    <input type="text" id="onlineChatInput" class="btn" placeholder="Say something..." style="flex:1;">
-                    <button class="btn" id="onlineChatSendBtn">Send</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div id="onlineGameStep" hidden>
               <div class="capture-row">
                 <span class="capture-status" id="onlineGameStatus"></span>
                 <button class="btn" id="onlineLeaveBtn">Leave game (back to lobby)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- The Game Hub (online users, host buttons, open games, chat) lives
+               here as its own top-level element rather than inside #onlinePanel,
+               so it isn't affected by that panel's own show/hide toggle: once
+               connected, it always stays expanded as a left-hand sidebar, for
+               every game (chess or 304), per the "always on the left" design. -->
+          <div id="onlineLobbyStep" class="rbx-lobby" hidden>
+            <div class="rbx-hub-header">
+              <div class="rbx-hub-title"><span class="emoji">🎮</span> Game Hub</div>
+              <span class="rbx-online-badge"><span class="rbx-online-dot"></span><span id="onlineCountBadge">0 online</span></span>
+            </div>
+            <div class="lobby-grid">
+              <div class="lobby-col">
+                <div class="lobby-section-title">Online now</div>
+                <ul class="lobby-list" id="onlineUsersList"></ul>
+                <div class="lobby-section-title">Host a game</div>
+                <div class="rbx-create-row">
+                  <button class="btn btn-primary rbx-create-card" id="onlineHostChessBtn">
+                    <span class="rbx-create-icon">♟️</span>
+                    <span class="rbx-create-label">Host Chess</span>
+                    <span class="rbx-create-sub">1v1 · classic rules</span>
+                  </button>
+                  <button class="btn btn-primary rbx-create-card" id="onlineHost304Btn">
+                    <span class="rbx-create-icon">🃏</span>
+                    <span class="rbx-create-label">Host 304 Table</span>
+                    <span class="rbx-create-sub">Up to 4 players</span>
+                  </button>
+                </div>
+                <div class="lobby-section-title">Open games</div>
+                <ul class="lobby-list" id="onlineGamesList"></ul>
+              </div>
+              <div class="lobby-col">
+                <div class="lobby-section-title">Chat</div>
+                <div class="lobby-chat-log" id="onlineChatLog"></div>
+                <div class="capture-row">
+                  <input type="text" id="onlineChatInput" class="btn" placeholder="Say something..." style="flex:1;">
+                  <button class="btn" id="onlineChatSendBtn">Send</button>
+                </div>
               </div>
             </div>
           </div>
@@ -619,7 +636,6 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
   </main>
 </div>
 
-<button id="lobbyPeekToggleBtn" class="btn" type="button" hidden title="Peek at who's online and the lobby chat">👥 Lobby</button>
 <div id="card304Root" hidden>
 <style>
 /* Full-viewport overlay: when shown, 304 sits on top of the chess page
@@ -3127,10 +3143,22 @@ var LESSONS = [
 
   function setOnlineStatus(text) { onlineStatusEl.textContent = text; }
 
+  // The Game Hub (#onlineLobbyStep) is always shown expanded as a left-hand
+  // sidebar for every game once connected — not just while browsing the
+  // lobby — so the rest of the page (and #card304Root's full-viewport
+  // overlay, when a 304 table is up) makes room for it rather than the hub
+  // being a togglable drawer.
+  const card304RootEl = document.getElementById('card304Root');
+  function setHubSidebarVisible(on) {
+    document.body.classList.toggle('rbx-hub-open', on);
+    if (card304RootEl) card304RootEl.classList.toggle('with-hub', on);
+  }
+
   function onlineShowStep(step) {
     onlineConnectStep.hidden = step !== 'connect';
-    onlineLobbyStep.hidden = step !== 'lobby';
+    onlineLobbyStep.hidden = step === 'connect';
     onlineGameStep.hidden = step !== 'game';
+    setHubSidebarVisible(step !== 'connect');
   }
 
   function onlineSend(msg) {
@@ -3320,45 +3348,6 @@ var LESSONS = [
     leave() { onlineSend({ t: 'leave' }); },
     backToLobby() { onlineShowStep('lobby'); },
   };
-
-  // "Peek at lobby" — the common lobby (#onlineLobbyStep) keeps receiving
-  // live users/games/chat updates the whole time a 304 table is on screen;
-  // it's just visually covered by #card304Root's full-viewport overlay. This
-  // button lives outside #card304Root (so it's reachable no matter which
-  // internal 304 screen — table setup, or the game itself — is showing) and
-  // lifts the common lobby above that overlay as a floating drawer, without
-  // leaving the table or touching any 304 game state.
-  const lobbyPeekToggleBtn = document.getElementById('lobbyPeekToggleBtn');
-  const card304RootEl = document.getElementById('card304Root');
-  let lobbyPeekBackdrop = null;
-  function setLobbyPeek(on) {
-    onlineLobbyStep.classList.toggle('lobby-peek-drawer', on);
-    if (lobbyPeekToggleBtn) lobbyPeekToggleBtn.setAttribute('aria-pressed', String(on));
-    if (on) {
-      if (!lobbyPeekBackdrop) {
-        lobbyPeekBackdrop = document.createElement('div');
-        lobbyPeekBackdrop.className = 'lobby-peek-backdrop';
-        lobbyPeekBackdrop.addEventListener('click', () => setLobbyPeek(false));
-        document.body.appendChild(lobbyPeekBackdrop);
-      }
-    } else if (lobbyPeekBackdrop) {
-      lobbyPeekBackdrop.remove();
-      lobbyPeekBackdrop = null;
-    }
-  }
-  if (lobbyPeekToggleBtn) {
-    lobbyPeekToggleBtn.addEventListener('click', () => {
-      setLobbyPeek(!onlineLobbyStep.classList.contains('lobby-peek-drawer'));
-    });
-  }
-  // Show the toggle only while a 304 table is actually on screen, and
-  // auto-close the drawer once it's put away so nothing is left stuck open.
-  if (card304RootEl && lobbyPeekToggleBtn) {
-    new MutationObserver(() => {
-      lobbyPeekToggleBtn.hidden = card304RootEl.hidden;
-      if (card304RootEl.hidden) setLobbyPeek(false);
-    }).observe(card304RootEl, { attributes: true, attributeFilter: ['hidden'] });
-  }
 
   render();
 
