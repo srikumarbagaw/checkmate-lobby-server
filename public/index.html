@@ -80,6 +80,7 @@ button{font-family:var(--font-body);}
 .tab.active{background:var(--accent); color:var(--accent-ink);}
 .tab:not(.active):hover{color:var(--ink);}
 .tab:focus-visible, button:focus-visible, .sq:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.topbar-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
 .rbx-hub-reopen{
   background:linear-gradient(180deg, #00A2FF, #0089DB); border:none; color:#fff; font-weight:800;
   border-radius:999px; padding:9px 18px; box-shadow:0 4px 0 #0089DB;
@@ -428,7 +429,11 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
       <button class="tab" data-tab="lessons" role="tab" aria-selected="false">Lessons</button>
       <button class="tab" data-tab="puzzles" role="tab" aria-selected="false">Puzzles</button>
     </nav>
-    <button class="btn rbx-hub-reopen" id="gameHubBtn" type="button" title="Open the Game Hub to play online">🎮 Game Hub</button>
+    <div class="topbar-actions">
+      <button class="btn btn-primary" id="newGameBtn">New game</button>
+      <button class="btn" id="onlineLeaveBtn" hidden>Leave game (back to lobby)</button>
+      <button class="btn rbx-hub-reopen" id="gameHubBtn" type="button" title="Open the Game Hub to play online">🎮 Game Hub</button>
+    </div>
   </header>
 
   <main>
@@ -453,7 +458,6 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
               <option value="master">Master opponent</option>
             </select>
             <button class="btn" id="configureCaptureBtn" hidden>Configure capture</button>
-            <button class="btn btn-primary" id="newGameBtn">New game</button>
             <label class="toggle-row" id="autoCoachRow"><input type="checkbox" id="autoCoach" checked> Always show best move</label>
           </div>
 
@@ -529,10 +533,11 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
           </div>
 
           <div class="capture-panel rbx-lobby rbx-panel-card" id="onlinePanel" hidden>
+            <!-- The "Leave game" button itself now lives in the header next
+                 to New game/Game Hub; this just shows who you're playing. -->
             <div id="onlineGameStep" hidden>
               <div class="capture-row">
                 <span class="capture-status" id="onlineGameStatus"></span>
-                <button class="btn" id="onlineLeaveBtn">Leave game (back to lobby)</button>
               </div>
             </div>
           </div>
@@ -1609,7 +1614,7 @@ function render(){
   const client=ROLE==='client';
   ['#optStrict','#optFast','#optRule100','#optTokens'].forEach(id=>$(id).disabled=client);
   $('#setnote').hidden=!client;
-  $('#newGameBtn').hidden=client;
+  $('#c304NewGameBtn').hidden=client;
   if(!lvArmed) $('#leaveBtn').textContent=ROLE==='solo'?'Main menu':'Leave table';
   const pill=$('#netpill');
   if(ROLE==='solo') pill.hidden=true;
@@ -3195,6 +3200,9 @@ var LESSONS = [
     onlineConnectStep.hidden = step !== 'connect';
     onlineLobbyStep.hidden = step === 'connect';
     onlineGameStep.hidden = step !== 'game';
+    // "Leave game" lives in the header now, alongside New game/Game Hub,
+    // rather than inside #onlineGameStep, so it's toggled separately.
+    onlineLeaveBtn.hidden = step !== 'game';
     setHubSidebarVisible(step !== 'connect');
   }
 
