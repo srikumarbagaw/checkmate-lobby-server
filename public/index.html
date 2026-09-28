@@ -134,6 +134,32 @@ body.rbx-hub-open{padding-left:356px;}
   padding:18px;
 }
 #onlineLobbyStep.rbx-lobby{background:var(--rbx-bg);}
+
+/* Landing gate — the first thing shown: a full-screen "Enter Lobby" front
+   door, above absolutely everything else (the Game Hub sidebar, a 304
+   table's overlay, all of it) until the person connects or skips it. */
+#welcomeGate{
+  position:fixed; inset:0; z-index:3000; display:flex; align-items:center; justify-content:center;
+  padding:24px; background:radial-gradient(1200px 700px at 50% 20%, #232838 0%, #12141c 60%);
+}
+#welcomeGate[hidden]{display:none !important;}
+.rbx-gate-card{
+  width:100%; max-width:420px; background:var(--rbx-card); border:1px solid var(--rbx-line);
+  border-radius:22px; padding:32px 28px; box-shadow:0 30px 80px -20px rgba(0,0,0,.6);
+  display:flex; flex-direction:column; gap:14px;
+}
+.rbx-gate-brand{display:flex; align-items:center; gap:12px;}
+.rbx-gate-icon{font-size:2.4rem; line-height:1;}
+.rbx-gate-title{margin:0; font-family:var(--font-display); font-size:1.5rem; color:var(--rbx-ink);}
+.rbx-gate-sub{margin:2px 0 0; font-size:.82rem; color:var(--rbx-dim); font-weight:700;}
+.rbx-gate-fields{display:flex; flex-direction:column; gap:10px; margin-top:4px;}
+.rbx-gate-fields input.btn{width:100%; padding:11px 14px; font-size:.95rem;}
+.rbx-gate-enter{width:100%; padding:12px; font-size:1rem;}
+.rbx-gate-skip{
+  background:none; border:none; color:var(--rbx-dim); font-weight:700; font-size:.83rem;
+  text-align:center; cursor:pointer; padding:6px; margin-top:-4px;
+}
+.rbx-gate-skip:hover{color:var(--rbx-ink); text-decoration:underline;}
 .rbx-lobby .capture-hint{color:var(--rbx-dim);}
 .rbx-lobby .capture-status{color:var(--rbx-dim);}
 .rbx-lobby input.btn{background:#fff; border:1px solid var(--rbx-line); color:var(--rbx-ink); border-radius:10px; font-weight:500;}
@@ -357,6 +383,30 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
 .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);}
 </style>
 
+<!-- Game Hub landing gate: shown up front, before anything else, so
+     "Enter lobby" is the very first thing you see rather than something
+     buried behind a mode dropdown and a toggle button. Dismissed either by
+     connecting, or by choosing to play offline instead. -->
+<div id="welcomeGate" class="rbx-lobby">
+  <div class="rbx-gate-card">
+    <div class="rbx-gate-brand">
+      <span class="rbx-gate-icon">🎮</span>
+      <div>
+        <h2 class="rbx-gate-title">Checkmate Coach</h2>
+        <p class="rbx-gate-sub">Game Hub — chess &amp; 304, together</p>
+      </div>
+    </div>
+    <p class="capture-hint">Enter your name and connect to the lobby to see who's online, chat, and start or join a game.</p>
+    <div class="rbx-gate-fields">
+      <input type="text" id="onlineNameInput" class="btn" placeholder="Your name" maxlength="20">
+      <input type="text" id="onlineServerInput" class="btn" placeholder="wss://your-app.onrender.com">
+      <button class="btn btn-primary rbx-gate-enter" id="onlineConnectBtn">Enter Lobby</button>
+    </div>
+    <p class="capture-status" id="onlineStatus">Not connected.</p>
+    <button class="rbx-gate-skip" id="playOfflineBtn" type="button">Skip — play offline vs. the computer →</button>
+  </div>
+</div>
+
 <div class="wrap">
   <header class="topbar">
     <div class="brand">
@@ -478,16 +528,6 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
           </div>
 
           <div class="capture-panel rbx-lobby rbx-panel-card" id="onlinePanel" hidden>
-            <div id="onlineConnectStep">
-              <p class="capture-hint">Enter your name and connect to the lobby to see who's online, chat, and start or join a game.</p>
-              <div class="capture-row">
-                <input type="text" id="onlineNameInput" class="btn" placeholder="Your name" maxlength="20" style="width:160px;">
-                <input type="text" id="onlineServerInput" class="btn" placeholder="wss://your-app.onrender.com" style="width:260px;">
-                <button class="btn btn-primary" id="onlineConnectBtn">Enter lobby</button>
-              </div>
-              <p class="capture-status" id="onlineStatus">Not connected.</p>
-            </div>
-
             <div id="onlineGameStep" hidden>
               <div class="capture-row">
                 <span class="capture-status" id="onlineGameStatus"></span>
@@ -2828,7 +2868,7 @@ var LESSONS = [
     configureCaptureBtn.hidden = mode !== 'capture';
     if (mode !== 'capture') capturePanel.hidden = true;
     configureOnlineBtn.hidden = mode !== 'online';
-    if (mode !== 'online') onlinePanel.hidden = true;
+    onlinePanel.hidden = mode !== 'online';
     // Engine assistance during a real match against another person isn't a
     // coaching tool anymore, it's just cheating your opponent — so the
     // "always show best move" toggle only exists outside online play.
@@ -3087,7 +3127,9 @@ var LESSONS = [
     startNewGame();
   });
   configureCaptureBtn.addEventListener('click', () => { capturePanel.hidden = !capturePanel.hidden; if (typeof debugLog === 'function') debugLog('Capture panel ' + (capturePanel.hidden ? 'closed' : 'opened') + '.'); });
-  configureOnlineBtn.addEventListener('click', () => { onlinePanel.hidden = !onlinePanel.hidden; });
+  // Reopens the landing gate (e.g. to change name/server, or reconnect after
+  // a drop) without disturbing an already-connected session underneath it.
+  configureOnlineBtn.addEventListener('click', () => { onlineConnectStep.hidden = false; });
   colorSelect.addEventListener('change', () => {
     humanColor = colorSelect.value; savePref('playAs', humanColor);
     orientation = humanColor;
@@ -3112,7 +3154,11 @@ var LESSONS = [
   // relays their moves too. Nothing peer-to-peer here: every message just
   // goes through that one server, which is what makes a shared "who's
   // online / open games" lobby possible in the first place.
-  const onlineConnectStep = document.getElementById('onlineConnectStep');
+  // The landing gate (#welcomeGate) doubles as the "connect" step: it's the
+  // element onlineShowStep('connect') shows/hides, just styled and placed as
+  // a full-screen front door instead of an inline row.
+  const onlineConnectStep = document.getElementById('welcomeGate');
+  const playOfflineBtn = document.getElementById('playOfflineBtn');
   const onlineLobbyStep = document.getElementById('onlineLobbyStep');
   const onlineGameStep = document.getElementById('onlineGameStep');
   const onlineNameInput = document.getElementById('onlineNameInput');
@@ -3165,7 +3211,24 @@ var LESSONS = [
     if (onlineWs && onlineWs.readyState === WebSocket.OPEN) onlineWs.send(JSON.stringify(msg));
   }
 
+  // The landing gate lets someone connect without ever touching the mode
+  // dropdown, but all the online-play gating (move sending, turn checks,
+  // "always show best move" being hidden, etc.) keys off mode === 'online'.
+  // So connecting always brings the app into online mode first, exactly as
+  // if they'd picked "Play online (lobby)" themselves.
+  function ensureOnlineMode() {
+    if (mode === 'online') return;
+    if (mode === 'capture' && typeof stopCapture === 'function') stopCapture();
+    modeSelect.value = 'online';
+    mode = 'online'; savePref('mode', mode);
+    applyModeVisibility();
+    orientation = humanColor;
+    buildBoardSquares(playBoardEl, orientation, false);
+    startNewGame();
+  }
+
   function connectToLobby() {
+    ensureOnlineMode();
     const name = onlineNameInput.value.trim().slice(0, 20) || 'Player';
     const url = onlineServerInput.value.trim();
     if (!url) { setOnlineStatus('Enter the lobby server address first.'); return; }
@@ -3334,6 +3397,15 @@ var LESSONS = [
   }
 
   onlineConnectBtn.addEventListener('click', connectToLobby);
+  if (playOfflineBtn) {
+    playOfflineBtn.addEventListener('click', () => {
+      onlineConnectStep.hidden = true;
+      // Only tear down the hub sidebar if we're not already connected — if
+      // this dismissed a gate re-opened from the toolbar mid-session (e.g.
+      // to tweak the name/server), the session underneath keeps running.
+      if (!onlineWs) setHubSidebarVisible(false);
+    });
+  }
   onlineHostChessBtn.addEventListener('click', () => hostOnlineGame('chess'));
   onlineHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
   onlineChatSendBtn.addEventListener('click', sendOnlineChat);
