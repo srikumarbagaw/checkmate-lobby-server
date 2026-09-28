@@ -1,9 +1,17 @@
-# Checkmate Coach — Lobby Server
+# Common Game Lobby Server — Checkmate Coach + 304 Card Table
 
-Runs the whole app: serves `public/index.html` (Checkmate Coach) and a
-WebSocket lobby on the same port, so one deployed URL gives you both the
-page and the multiplayer lobby (presence, chat, hosting/joining games,
-move relay).
+Runs the whole app: serves `public/index.html` and a WebSocket lobby on the
+same port, so one deployed URL gives you a shared lobby (who's online,
+chat) that can host and join games of either kind:
+
+- **Chess** (Checkmate Coach) — 2 players.
+- **304** — the Eelam Tamil partnership card game, 4 seats; any empty seats
+  are played by the computer, so a table can start with 2, 3 or 4 humans.
+
+The server itself doesn't know the rules of either game — it just tracks
+who's connected, lists open tables, and relays each game's own messages to
+the right player(s). Each game's client code (already in `public/index.html`)
+handles everything else.
 
 ## Run locally
 
