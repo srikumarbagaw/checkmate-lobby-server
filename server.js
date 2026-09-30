@@ -82,29 +82,21 @@ function broadcastLobby() {
 }
 
 // Removes a client from whatever room it's in and tells the people who
-// need to know. Host leaving closes the room for everyone (there's no
-// authority left to run the game); a non-host leaving just vacates their
-// seat and tells the host, who decides what happens next (chess ends the
-// game; 304 lets the computer take over that seat).
+// need to know. Chess only ever has two seats, so either one leaving ends
+// it for the other. 304 has four seats sharing one hand of cards -- there's
+// no sane way to keep that going once anyone walks out, host or guest -- so
+// the whole table closes and everyone else still seated is sent back to the
+// common lobby together.
 function leaveGame(c) {
   const game = c.gameId && games.get(c.gameId);
   c.gameId = null;
   if (!game) return;
-  if (game.hostId === c.id) {
-    games.delete(game.id);
-    for (const memberId of game.members.keys()) {
-      if (memberId === c.id) continue;
-      const mc = findClientRecord(memberId); if (mc) mc.gameId = null;
-      send(findClientWs(memberId), { t: game.kind === 'chess' ? 'opponentLeft' : 'hostLeft' });
-    }
-  } else {
-    game.members.delete(c.id);
-    send(findClientWs(game.hostId), { t: game.kind === 'chess' ? 'opponentLeft' : 'memberLeft', id: c.id });
-    if (game.kind === 'chess') {
-      games.delete(game.id);
-      const hc = findClientRecord(game.hostId); if (hc) hc.gameId = null;
-    }
-    // Other kinds (304): the room persists; the host manages the vacated seat.
+  const leaverName = game.members.get(c.id) || 'A player';
+  games.delete(game.id);
+  for (const memberId of game.members.keys()) {
+    if (memberId === c.id) continue;
+    const mc = findClientRecord(memberId); if (mc) mc.gameId = null;
+    send(findClientWs(memberId), game.kind === 'chess' ? { t: 'opponentLeft' } : { t: 'tableClosed', name: leaverName });
   }
 }
 

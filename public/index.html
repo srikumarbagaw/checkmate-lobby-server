@@ -1713,18 +1713,6 @@ function onMemberJoined(id, name){
   NET.lobby.seats[seat]={name:uniqueName(name,seat),kind:'human'};
   broadcastLobby();
 }
-function onMemberLeft(id){
-  if (ROLE!=='host') return;
-  const seat=NET.seatOf[id];
-  if (seat==null) return;
-  delete NET.conns[seat]; delete NET.seatOf[id];
-  if (LOBBY.mode==='host'){ NET.lobby.seats[seat]={name:SEATPOS[seat],kind:'ai'}; broadcastLobby(); return; }
-  if (S){
-    S.humans[seat]=false; TABLE.humans[seat]=false;
-    log(`${S.names[seat]} left the table. The computer plays this seat until they rejoin.`,'rs');
-    render(); step();
-  }
-}
 function onHostRelayData(fromId, d){
   if (!d||typeof d!=='object') return;
   const seat=NET.seatOf[fromId]; if (seat==null) return;
@@ -1772,9 +1760,13 @@ function onClientData(d){
     render();
   }
 }
-function onHostLeft(){
-  if (ROLE!=='client') return;
-  returnToCommonLobby('The host closed the table.');
+// With four seats sharing one hand of cards, there's no sane way to keep a
+// table going once anyone walks out mid-game -- host or guest -- so the
+// whole room closes and everyone still there is sent back to the common
+// lobby together, the same way it already worked when the host left.
+function onTableClosed(name){
+  if (!active()) return;
+  returnToCommonLobby(`${name||'A player'} left the table.`);
 }
 
 function handleRelay(fromId, data){
@@ -1937,7 +1929,7 @@ function teardown(){
 
 window.CardGame304 = {
   hostFromCommonLobby, joinFromCommonLobby, handleRelay,
-  handleMemberJoined: onMemberJoined, handleMemberLeft: onMemberLeft, handleHostLeft: onHostLeft,
+  handleMemberJoined: onMemberJoined, handleTableClosed: onTableClosed,
   active, teardown,
 };
 
@@ -3187,7 +3179,7 @@ var LESSONS = [
     const busy = mode !== 'online'
       || onlineInGame
       || !!onlineHostingGameId
-      || (window.CardGame304 && window.CardGame304.active());
+      || (card304RootEl && !card304RootEl.hidden);
     [onlineHostChessBtn, onlineHost304Btn].forEach(btn => {
       if (!btn) return;
       btn.disabled = busy;
@@ -3268,10 +3260,12 @@ var LESSONS = [
       updateHostButtonsAvailability();
     } else if (msg.t === 'memberJoined') {
       if (window.CardGame304) window.CardGame304.handleMemberJoined(msg.id, msg.name);
-    } else if (msg.t === 'memberLeft') {
-      if (window.CardGame304) window.CardGame304.handleMemberLeft(msg.id);
-    } else if (msg.t === 'hostLeft') {
-      if (window.CardGame304) window.CardGame304.handleHostLeft();
+    } else if (msg.t === 'tableClosed') {
+      // Any player leaving a 304 table (host or guest) closes it for
+      // everyone else still seated -- there's no sane way to keep a
+      // four-handed game going once someone walks out.
+      if (window.CardGame304) window.CardGame304.handleTableClosed(msg.name);
+      updateHostButtonsAvailability();
     } else if (msg.t === 'relay') {
       if (window.CardGame304 && window.CardGame304.active()) { window.CardGame304.handleRelay(msg.from, msg.data); return; }
       // Chess's own in-room messages (move / newgame) ride on relay too.
