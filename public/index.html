@@ -211,6 +211,10 @@ body.rbx-hub-open{padding-left:356px;}
 .rbx-lobby #onlineGamesList{max-height:220px;}
 .rbx-lobby #onlineGamesList li{background:var(--rbx-card); border:1px solid var(--rbx-line); border-radius:14px; padding:10px 12px; transition:transform .12s ease, box-shadow .12s ease;}
 .rbx-lobby #onlineGamesList li:hover{transform:translateY(-2px); box-shadow:0 10px 20px -10px rgba(20,24,34,.25);}
+.rbx-lobby #onlineLiveList{max-height:220px;}
+.rbx-lobby #onlineLiveList li{background:var(--rbx-card); border:1px solid var(--rbx-line); border-radius:14px; padding:10px 12px; transition:transform .12s ease, box-shadow .12s ease;}
+.rbx-lobby #onlineLiveList li:hover{transform:translateY(-2px); box-shadow:0 10px 20px -10px rgba(20,24,34,.25);}
+.rbx-watch-pill{font-size:11px; font-weight:700; letter-spacing:.02em; padding:2px 8px; border-radius:999px; background:rgba(236,143,62,.15); color:#b5590f;}
 .rbx-game-tile{display:flex; align-items:center; gap:10px; width:100%;}
 .rbx-game-icon{width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex:none; color:#fff;}
 .rbx-game-icon.chess{background:linear-gradient(160deg,#3A3F51,#1C1E29);}
@@ -587,6 +591,8 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
                 </div>
                 <div class="lobby-section-title">Open games</div>
                 <ul class="lobby-list" id="onlineGamesList"></ul>
+                <div class="lobby-section-title">Happening games</div>
+                <ul class="lobby-list" id="onlineLiveList"></ul>
               </div>
               <div class="lobby-col">
                 <div class="lobby-section-title">Chat</div>
@@ -619,6 +625,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
           </div>
 
           <div class="board-shell" id="chessBoardShell">
+            <p id="chessSpectatorsLine" style="margin:0 0 8px; font-size:.82rem; color:var(--ink-dim);" hidden></p>
             <div class="player-bar" id="playerBarTop">
               <span class="player-bar-name" id="playerNameTop">Opponent</span>
               <span class="player-bar-timer" id="playerTimerTop">0:00</span>
@@ -762,7 +769,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
 /* phones */
 @media (max-width:600px){#card304Root .app{padding-block:8px 24px;gap:14px}#card304Root .board{grid-template-columns:58px minmax(0,1fr) 58px;gap:6px}#card304Root .topbar{gap:4px 10px}#card304Root .brand{font-size:30px}#card304Root .brand small{display:none}#card304Root .status{font-size:14px;min-width:0;flex-basis:100%;order:3}#card304Root .seat{padding:4px 0;gap:4px}#card304Root .seat.north{gap:8px}#card304Root .seat.west, #card304Root .seat.east{min-width:0}#card304Root .who{min-width:0;max-width:100%}#card304Root .west .name, #card304Root .east .name{font-size:12px;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#card304Root .chip{font-size:8.5px;letter-spacing:.04em;padding:2px 4px}#card304Root .west .minis .mini+.mini, #card304Root .east .minis .mini+.mini{margin-top:-23px}#card304Root .bubble{font-size:17px;min-height:0}#card304Root .felt{min-height:clamp(250px,44vh,330px);border-radius:14px}#card304Root .felt .corner{font-size:10.5px;gap:4px;max-width:60%;flex-wrap:wrap}#card304Root .felt .corner.l{top:8px;left:10px}#card304Root .felt .corner.r{top:auto;bottom:8px;right:10px;justify-content:flex-end}#card304Root .slot-2{top:9%}#card304Root .slot-0{bottom:13%}#card304Root .slot-1{right:5%}#card304Root .slot-3{left:5%}#card304Root .center-msg{padding:28px 10px}#card304Root .result{padding:14px 14px;gap:6px}#card304Root .result h3{font-size:21px}#card304Root .south{gap:6px}#card304Root .controls .ctl-label{font-size:12.5px}#card304Root .btn{font-size:13.5px;padding:.55em .85em}#card304Root .stepper button{width:32px}#card304Root .hand{padding-top:10px;gap:0}#card304Root .hand .card+.card{margin-left:-4px}#card304Root .indwrap{margin-left:4px;padding-left:6px}#card304Root .pile{transform:scale(.85)}
 }#card304Root [hidden]{display:none!important}#card304Root .set input[type=range]{width:100%;accent-color:var(--ns)}#card304Root /* lobby */
-.lobby{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;background:rgba(11,13,30,.82);backdrop-filter:blur(6px)}#card304Root .lcard{width:100%;max-width:560px;margin-top:6vh;background:var(--table);border:1px solid var(--line);border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}#card304Root .lbrand{font-family:var(--disp);font-size:64px;line-height:.9;color:var(--ns)}#card304Root .lsub{margin:0;color:var(--muted)}#card304Root .lcard h3{margin:0;font-family:var(--disp);font-weight:400;font-size:28px;line-height:1.1}#card304Root .field{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}#card304Root .field input, #card304Root .seatrow input{font:500 16px var(--ui);color:var(--ink);background:var(--table-2);border:1px solid var(--line);border-radius:7px;padding:9px 11px;text-transform:none;letter-spacing:0}#card304Root .field input:focus, #card304Root .seatrow input:focus{outline:2px solid var(--ns);outline-offset:1px}#card304Root .field input.codein{font-family:var(--disp);font-size:28px;letter-spacing:.2em;text-transform:uppercase;padding:6px 12px}#card304Root .lbtns{display:flex;flex-direction:column;gap:8px}#card304Root .lbtns .btn{padding:.8em 1em;font-size:15px;text-align:left}#card304Root .lnote{margin:0;color:var(--faint);font-size:12.5px}#card304Root .lerr{margin:0;color:#ef6b5f;font-size:13.5px;min-height:1em}#card304Root .codebox{display:flex;align-items:center;gap:12px;flex-wrap:wrap}#card304Root .code{font-family:var(--disp);font-size:48px;letter-spacing:.18em;line-height:1;color:var(--ink);background:var(--table-2);border:1px dashed var(--ns);border-radius:10px;padding:8px 14px 4px}#card304Root .seats{display:flex;flex-direction:column;gap:6px}#card304Root .seatrow{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--line)}#card304Root .seatrow.me{border-color:rgba(236,143,62,.55)}#card304Root .seatrow .pos{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}#card304Root .seatrow .pos i{font-style:normal;color:var(--ns)}#card304Root .seatrow .pos i.ew{color:var(--ew)}#card304Root .seatrow .nm{font-weight:700;font-size:15px;overflow-wrap:anywhere}#card304Root .seatrow input{font-size:14px;padding:6px 9px;width:100%}#card304Root .chip.on{background:rgba(92,192,179,.18);color:var(--ew)}#card304Root .chip.ai{background:var(--table-3)}#card304Root .lrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#card304Root .netpill{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(92,192,179,.15);color:var(--ew)}
+.lobby{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;background:rgba(11,13,30,.82);backdrop-filter:blur(6px)}#card304Root .lcard{width:100%;max-width:560px;margin-top:6vh;background:var(--table);border:1px solid var(--line);border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}#card304Root .lbrand{font-family:var(--disp);font-size:64px;line-height:.9;color:var(--ns)}#card304Root .lsub{margin:0;color:var(--muted)}#card304Root .lcard h3{margin:0;font-family:var(--disp);font-weight:400;font-size:28px;line-height:1.1}#card304Root .field{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}#card304Root .field input, #card304Root .seatrow input{font:500 16px var(--ui);color:var(--ink);background:var(--table-2);border:1px solid var(--line);border-radius:7px;padding:9px 11px;text-transform:none;letter-spacing:0}#card304Root .field input:focus, #card304Root .seatrow input:focus{outline:2px solid var(--ns);outline-offset:1px}#card304Root .field input.codein{font-family:var(--disp);font-size:28px;letter-spacing:.2em;text-transform:uppercase;padding:6px 12px}#card304Root .lbtns{display:flex;flex-direction:column;gap:8px}#card304Root .lbtns .btn{padding:.8em 1em;font-size:15px;text-align:left}#card304Root .lnote{margin:0;color:var(--faint);font-size:12.5px}#card304Root .lerr{margin:0;color:#ef6b5f;font-size:13.5px;min-height:1em}#card304Root .codebox{display:flex;align-items:center;gap:12px;flex-wrap:wrap}#card304Root .code{font-family:var(--disp);font-size:48px;letter-spacing:.18em;line-height:1;color:var(--ink);background:var(--table-2);border:1px dashed var(--ns);border-radius:10px;padding:8px 14px 4px}#card304Root .seats{display:flex;flex-direction:column;gap:6px}#card304Root .seatrow{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--line)}#card304Root .seatrow.me{border-color:rgba(236,143,62,.55)}#card304Root .seatrow .pos{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em}#card304Root .seatrow .pos i{font-style:normal;color:var(--ns)}#card304Root .seatrow .pos i.ew{color:var(--ew)}#card304Root .seatrow .nm{font-weight:700;font-size:15px;overflow-wrap:anywhere}#card304Root .seatrow input{font-size:14px;padding:6px 9px;width:100%}#card304Root .chip.on{background:rgba(92,192,179,.18);color:var(--ew)}#card304Root .chip.ai{background:var(--table-3)}#card304Root .lrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#card304Root .netpill{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(92,192,179,.15);color:var(--ew)}#card304Root .netpill.spec{background:rgba(236,143,62,.15);color:var(--ns);text-transform:none;letter-spacing:0;font-weight:600}
 @media (max-width:520px){#card304Root .seatrow{grid-template-columns:1fr auto}#card304Root .seatrow .pos{grid-column:1/-1}#card304Root .code{font-size:38px}}
 
 </style>
@@ -774,6 +781,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
       <div class="brand">304<small>Eelam Tamil partnership game</small></div>
       <div class="status" id="status" aria-live="polite"></div>
       <span class="netpill" id="netpill" hidden></span>
+      <span class="netpill spec" id="c304SpecLine" hidden></span>
     </header>
     <section class="seat north" id="seat2"></section>
     <section class="seat west" id="seat3"></section>
@@ -855,15 +863,23 @@ const vb=(p,a,b)=>`⟦v${p}|${a}|${b}⟧`; // verb agreeing with the name
 const tn=t=>`⟦t${t}⟧`;                 // team label
 
 let S=null, timer=null, bidSel=150, bidKey='';
-let ME=0, ROLE='solo';                 // ROLE: solo | host | client
+let ME=0, ROLE='solo';                 // ROLE: solo | host | client | spectator
 let TABLE={names:['Ellalan','Cholan','Cheran','Pandiyan'],humans:[true,false,false,false]};
+// A spectator is parked at seat ME=0 (a harmless, always-valid index) so
+// none of the seat-math below has to special-case an unseated viewer --
+// instead every "is this seat mine" check routes through isMe(), which is
+// hard-wired to false for a spectator. That keeps a spectator from ever
+// being told "your turn", "your lead", or having a closed/face-down card
+// quietly revealed just because it happens to belong to seat 0.
+let SPECTATING=false;
+function isMe(p){ return !SPECTATING && p===ME; }
 
 const BL=b=>(b==='PCC'||b===999)?'PCC':String(b<=200?b-100:b);
 const ALLOW=b=>Math.floor((304-b)/10);
 const BLP=b=>(b==='PCC'||b===999)?'Partner Close Caps':`${BL(b)} (${ALLOW(b)} pts)`;
 const FP=x=>(x/10).toFixed(1).replace(/\.0$/,'');
 
-function dn(p){return p===ME?'You':esc(S.names[p]);}
+function dn(p){return isMe(p)?'You':esc(S.names[p]);}
 function teamLabel(t){
   const a=t,b=t+2;
   if(team(ME)===t){const o=ME===a?b:a;return `You &amp; ${esc(S.names[o])}`;}
@@ -873,8 +889,8 @@ function R(s){
   if(!s) return '';
   return String(s)
     .replace(/⟦n(\d)⟧/g,(_,p)=>dn(+p))
-    .replace(/⟦o(\d)⟧/g,(_,p)=>+p===ME?'you':esc(S.names[+p]))
-    .replace(/⟦v(\d)\|([^|]*)\|([^⟧]*)⟧/g,(_,p,a,b)=>+p===ME?a:b)
+    .replace(/⟦o(\d)⟧/g,(_,p)=>isMe(+p)?'you':esc(S.names[+p]))
+    .replace(/⟦v(\d)\|([^|]*)\|([^⟧]*)⟧/g,(_,p,a,b)=>isMe(+p)?a:b)
     .replace(/⟦t(\d)⟧/g,(_,t)=>teamLabel(+t));
 }
 const isHuman=p=>!!(S.humans&&S.humans[p]);
@@ -1391,7 +1407,7 @@ function badges(p){
   if(S.dealer===p) h+=`<span class="chip d" title="Dealer">Dealer</span>`;
   if(S.maker===p&&S.phase!=='bid4'&&S.maker!=null) h+=`<span class="chip m ${team(p)!==team(ME)?'ew':''}">Trump maker</span>`;
   if(S.pccOut===p&&S.phase==='play') h+=`<span class="chip out">Sitting out</span>`;
-  if(ROLE!=='solo'&&p!==ME&&!isHuman(p)) h+=`<span class="chip ai" title="Played by the computer">CPU</span>`;
+  if(ROLE!=='solo'&&!isMe(p)&&!isHuman(p)) h+=`<span class="chip ai" title="Played by the computer">CPU</span>`;
   return h;
 }
 function bubbleHTML(p){const b=S.bubbles[p];if(!b)return '<div class="bubble"></div>';const isNum=/^\d+$/.test(b)||b==='PCC';return `<div class="bubble ${isNum?'':'pass'}">${esc(b)}</div>`;}
@@ -1399,7 +1415,7 @@ function pileHTML(p){
   let n=(S.tricks||[]).filter(t=>t.winner===p).length;
   if(S.trick&&S.trick.resolved&&S.trick.resolved.winner===p) n--;
   let st='';for(let i=0;i<Math.min(n,4);i++) st+=`<div class="mini" style="transform:translate(${i*2}px,${-i*2}px) rotate(${i%2?5:-4}deg)"></div>`;
-  return `<div class="pile ${n>0?'':'empty'}" id="pile${p}" title="Tricks won by ${p===ME?'you':esc(S.names[p])}">${st}<span class="pc">${n}</span></div>`;
+  return `<div class="pile ${n>0?'':'empty'}" id="pile${p}" title="Tricks won by ${isMe(p)?'you':esc(S.names[p])}">${st}<span class="pc">${n}</span></div>`;
 }
 function seatHTML(p){
   const n=S.hands[p].length;
@@ -1416,7 +1432,7 @@ function southBar(){
 function trumpCorner(){
   if(S.maker==null||S.phase==='bid4'||S.phase==='pause') return '';
   if(S.trumpOpen&&S.trump) return `<span>Trump</span>${suitSpan(S.trump)}<b>${SNAME[S.trump]}</b>`;
-  if(S.maker===ME&&S.trump) return `<span>Trump</span><b>closed</b><span>· yours: ${suitSpan(S.trump)}</span>`;
+  if(isMe(S.maker)&&S.trump) return `<span>Trump</span><b>closed</b><span>· yours: ${suitSpan(S.trump)}</span>`;
   return `<span>Trump</span><b>closed</b>`;
 }
 function bidCorner(){
@@ -1433,13 +1449,13 @@ function feltHTML(){
       const fresh=now-x.t<380?'fresh':'';
       let c;
       if(vis) c=cardHTML(x.card,{cls:fresh});
-      else if(x.p===ME) c=cardHTML(x.card,{cls:`fd ${fresh}`});
+      else if(isMe(x.p)) c=cardHTML(x.card,{cls:`fd ${fresh}`});
       else c=backHTML(fresh);
       const lab=x.isInd?'<span class="tinylab">trump card</span>':'';
       h+=`<div class="slot slot-${pos(x.p)}">${c}${lab}</div>`;
     }
     if(!t.plays.length&&!t.resolved){
-      const who=S.turn===ME?'Your lead':`${dn(S.turn)} to lead`;
+      const who=isMe(S.turn)?'Your lead':`${dn(S.turn)} to lead`;
       h+=`<div class="center-msg"><div class="sub">Trick ${S.trickNo+1} of 8 · ${who}</div></div>`;
     }
     return h;
@@ -1460,9 +1476,9 @@ function feltHTML(){
   }
   let big='',sub='';
   if(ph==='bid4'){const b=S.bid4;big=b.high?BL(b.high.amount):'—';sub=b.high?`High bid · ${dn(b.high.p)}. Others may take ${ALLOW(b.high.amount)} points.`:'Bidding on four cards. Lowest bid is 50 (others may take 15).';}
-  else if(ph==='indicator'){big=BL(S.bid);sub=S.maker===ME?'Pick your trump card from your hand below.':`${dn(S.maker)} is choosing a trump card.`;}
+  else if(ph==='indicator'){big=BL(S.bid);sub=isMe(S.maker)?'Pick your trump card from your hand below.':`${dn(S.maker)} is choosing a trump card.`;}
   else if(ph==='bid8'){const b=S.bid8;big=b.high?BL(b.high.amount):BL(S.bid);sub=b.high?`Eight-card bid · ${dn(b.high.p)}`:`Eight-card round: 250 or more to take over.`;}
-  else if(ph==='openclosed'){big=BL(S.bid);sub=S.maker===ME?'Choose an open or closed trump game.':`${dn(S.maker)} is deciding: open or closed trump.`;}
+  else if(ph==='openclosed'){big=BL(S.bid);sub=isMe(S.maker)?'Choose an open or closed trump game.':`${dn(S.maker)} is deciding: open or closed trump.`;}
   else if(ph==='pause'){big='';sub=R(S.pauseMsg);}
   h+=`<div class="center-msg"><div class="big">${big}</div><div class="sub">${sub}</div></div>`;
   return h;
@@ -1470,25 +1486,25 @@ function feltHTML(){
 function statusText(){
   const ph=S.phase,w=whoseTurn();
   if(ph==='bid4'){
-    if(w===ME) return S.bid4.asking?`<span class="s">${dn(S.bid4.asking.asker)} asked you to bid.</span> Bid for your team, or pass.`:'<span class="s">Your call.</span> Bid on your first four cards, or pass.';
-    if(S.bid4.asking&&S.bid4.asking.asker===ME) return `${dn(w)} is bidding for you…`;
+    if(isMe(w)) return S.bid4.asking?`<span class="s">${dn(S.bid4.asking.asker)} asked you to bid.</span> Bid for your team, or pass.`:'<span class="s">Your call.</span> Bid on your first four cards, or pass.';
+    if(S.bid4.asking&&isMe(S.bid4.asking.asker)) return `${dn(w)} is bidding for you…`;
     return `${dn(w)} is thinking…`;
   }
-  if(ph==='indicator')return w===ME?'<span class="s">You won the bid.</span> Choose a trump card to place face down.':`${dn(w)} is choosing trump…`;
-  if(ph==='bid8')return w===ME?'<span class="s">Eight-card round.</span> One chance to bid 250+ or pass.':`${dn(w)} is considering an eight-card bid…`;
-  if(ph==='openclosed')return w===ME?'<span class="s">Before the first lead:</span> open or closed trump?':`${dn(w)} is deciding on trump…`;
+  if(ph==='indicator')return isMe(w)?'<span class="s">You won the bid.</span> Choose a trump card to place face down.':`${dn(w)} is choosing trump…`;
+  if(ph==='bid8')return isMe(w)?'<span class="s">Eight-card round.</span> One chance to bid 250+ or pass.':`${dn(w)} is considering an eight-card bid…`;
+  if(ph==='openclosed')return isMe(w)?'<span class="s">Before the first lead:</span> open or closed trump?':`${dn(w)} is deciding on trump…`;
   if(ph==='play'){
-    if(S.trick.resolved)return `${dn(S.trick.resolved.winner)} ${S.trick.resolved.winner===ME?'take':'takes'} the trick.`;
+    if(S.trick.resolved)return `${dn(S.trick.resolved.winner)} ${isMe(S.trick.resolved.winner)?'take':'takes'} the trick.`;
     if(S.caps&&S.caps.called)return `Caps called by ${dn(S.caps.by)}. Playing it out…`;
-    if(S.turn===ME){
+    if(isMe(S.turn)){
       const t=S.trick;
-      if(!t.plays.length)return '<span class="s">Your lead.</span>'+(S.exhausted&&S.maker===ME&&S.hands[ME].some(c=>su(c)===S.trump)?' You hold every trump left, so you must lead them.':'');
+      if(!t.plays.length)return '<span class="s">Your lead.</span>'+(S.exhausted&&isMe(S.maker)&&S.hands[ME].some(c=>su(c)===S.trump)?' You hold every trump left, so you must lead them.':'');
       const L=su(t.plays[0].card);
       if(S.hands[ME].some(c=>su(c)===L))return `<span class="s">Your turn.</span> Follow ${suitSpan(L)}.`;
-      if(!S.trumpOpen)return S.maker===ME?`<span class="s">You can't follow ${suitSpan(L)}.</span> Discard face down, or cut with your trump card.`:`<span class="s">You can't follow ${suitSpan(L)}.</span> Your card goes face down.`;
+      if(!S.trumpOpen)return isMe(S.maker)?`<span class="s">You can't follow ${suitSpan(L)}.</span> Discard face down, or cut with your trump card.`:`<span class="s">You can't follow ${suitSpan(L)}.</span> Your card goes face down.`;
       return `<span class="s">You can't follow ${suitSpan(L)}.</span> Play any card.`;
     }
-    return S.pccOut===ME?`You're sitting out. ${dn(S.turn)} to play…`:`${dn(S.turn)} to play…`;
+    return isMe(S.pccOut)?`You're sitting out. ${dn(S.turn)} to play…`:`${dn(S.turn)} to play…`;
   }
   if(ph==='pause')return R(S.pauseMsg);
   if(ph==='handEnd')return 'Hand over.';
@@ -1496,10 +1512,11 @@ function statusText(){
   return '';
 }
 function controlsHTML(){
+  if(SPECTATING) return `<div class="ctl-label">👀 Spectating</div>`;
   const ph=S.phase;
   const key=`${S.handNo}|${ph}|${S.log.length}`;
   const pn=esc(S.names[partner(ME)]);
-  if(ph==='bid4'&&whoseTurn()===ME){
+  if(ph==='bid4'&&isMe(whoseTurn())){
     const min=min4(ME);
     if(key!==bidKey){bidKey=key;bidSel=min;}
     bidSel=Math.max(min,Math.min(300,bidSel));
@@ -1507,7 +1524,7 @@ function controlsHTML(){
     let why='';
     const base=b.high?b.high.amount+10:150;
     if(min===200&&base<200) why=b.high&&b.high.p===partner(ME)?` (100 rule: ${pn} holds the bid)`:' (100 rule: you have already spoken)';
-    const asked=b.asking&&b.asking.bidder===ME;
+    const asked=b.asking&&isMe(b.asking.bidder);
     return `<div class="ctl-label">${asked?`Bidding for ${pn}. `:''}Four-card bid · lowest <b>${BL(min)}</b>${why}. Bidding ${BL(bidSel)} lets the other team take at most <b>${ALLOW(bidSel)}</b> points.</div><div class="row">
       ${min<=300?`<div class="stepper"><button data-act="dec" aria-label="Lower bid">−</button><output>${BL(bidSel)}</output><button data-act="inc" aria-label="Raise bid">+</button></div>
       <button class="btn primary" data-act="bid4">Bid ${BL(bidSel)}</button>`:''}
@@ -1516,7 +1533,7 @@ function controlsHTML(){
       ${!asked&&canRedeal(ME)?'<button class="btn warn" data-act="redeal">Redeal (under 1.5 pts)</button>':''}
     </div>`;
   }
-  if(ph==='bid8'&&whoseTurn()===ME){
+  if(ph==='bid8'&&isMe(whoseTurn())){
     if(mustPass8(ME)) return `<div class="ctl-label">${S.bid8.high.pcc?'Partner Close Caps has been bid.':`${pn} holds the eight-card bid.`} You must pass.</div><div class="row"><button class="btn" data-act="pass8">Pass</button></div>`;
     const min=min8();
     if(key!==bidKey){bidKey=key;bidSel=min;}
@@ -1527,9 +1544,9 @@ function controlsHTML(){
       <button class="btn" data-act="pcc">Partner Close Caps</button>
       <button class="btn" data-act="pass8">Pass</button></div>`;
   }
-  if(ph==='indicator'&&S.maker===ME) return `<div class="ctl-label">Tap a card. Its suit becomes trump, and it stays face down on the table.</div>`;
-  if(ph==='openclosed'&&S.maker===ME){
-    const first=(S.isPCC?S.maker:(S.dealer+1)%4)===ME;
+  if(ph==='indicator'&&isMe(S.maker)) return `<div class="ctl-label">Tap a card. Its suit becomes trump, and it stays face down on the table.</div>`;
+  if(ph==='openclosed'&&isMe(S.maker)){
+    const first=isMe(S.isPCC?S.maker:(S.dealer+1)%4);
     return `<div class="ctl-label">Closed keeps trump secret: players who can't follow play face down. Open shows your trump card now${first?' (needed if you want to lead trump first)':''}.</div>
       <div class="row"><button class="btn primary" data-act="closed">Keep trump closed</button><button class="btn" data-act="open">Play open trump</button></div>`;
   }
@@ -1537,12 +1554,13 @@ function controlsHTML(){
   return '';
 }
 function handHTML(){
+  if(SPECTATING){ $('#hand').classList.remove('out'); return ''; }
   const ph=S.phase;
   const h=sortHand(S.hands[ME]);
   let legal=null;
-  const myPlay=ph==='play'&&S.turn===ME&&S.trick&&!S.trick.resolved&&!(S.caps&&S.caps.called);
+  const myPlay=ph==='play'&&isMe(S.turn)&&S.trick&&!S.trick.resolved&&!(S.caps&&S.caps.called);
   if(myPlay) legal=legalPlays(ME);
-  const choosing=ph==='indicator'&&S.maker===ME;
+  const choosing=ph==='indicator'&&isMe(S.maker);
   let out='';let prev=null;
   for(const c of h){
     let cls='',attr=`data-act="card" data-card="${c}"`;
@@ -1552,11 +1570,11 @@ function handHTML(){
     out+=cardHTML(c,{tag:'button',cls,attr:attr+(cls==='off'||(!cls)?' tabindex="-1"':'')});
     prev=c;
   }
-  if(S.indicator&&S.indicator.owner===ME&&!S.trumpOpen){
+  if(S.indicator&&isMe(S.indicator.owner)&&!S.trumpOpen){
     const live=legal&&legal.some(o=>o.isInd);
     out+=`<div class="indwrap">${cardHTML(S.indicator.card,{tag:'button',cls:live?'live':(legal?'off':''),attr:'data-act="ind"'})}<span class="tinylab">trump card</span></div>`;
   }
-  $('#hand').classList.toggle('out',S.pccOut===ME&&ph==='play');
+  $('#hand').classList.toggle('out',isMe(S.pccOut)&&ph==='play');
   return out;
 }
 function scoreHTML(){
@@ -1570,9 +1588,9 @@ function infoHTML(){
   const tw=x=>S.tricks.filter(t=>team(t.winner)===x).length;
   const done=S.phase==='handEnd'||S.phase==='gameEnd';
   const vp=x=>{ if(done&&S.result) return S.result.P[x];
-    let n=0; S.tricks.forEach(t=>{if(team(t.winner)!==x)return; t.plays.forEach(pl=>{ if(!pl.faceDown||pl.revealed||pl.p===ME) n+=pts(pl.card);});}); return n; };
+    let n=0; S.tricks.forEach(t=>{if(team(t.winner)!==x)return; t.plays.forEach(pl=>{ if(!pl.faceDown||pl.revealed||isMe(pl.p)) n+=pts(pl.card);});}); return n; };
   const trump=S.maker==null||S.phase==='bid4'||S.phase==='pause'?'—':
-    ((S.trumpOpen||done)&&S.trump?`${SYM[S.trump]} ${SNAME[S.trump]}`:(S.maker===ME&&S.trump?`Closed (${SYM[S.trump]})`:'Closed'));
+    ((S.trumpOpen||done)&&S.trump?`${SYM[S.trump]} ${SNAME[S.trump]}`:(isMe(S.maker)&&S.trump?`Closed (${SYM[S.trump]})`:'Closed'));
   return `<dl class="kv">
     <dt>Hand</dt><dd>${S.handNo}</dd>
     <dt>Dealer</dt><dd>${dn(S.dealer)}</dd>
@@ -1587,10 +1605,10 @@ function lastHTML(){
   if(!lt) return '<div class="empty">No trick completed yet.</div>';
   return [0,1,2,3].map(k=>{
     const p=(ME+k)%4;
-    const label=p===ME?'You':esc(S.names[p]).slice(0,8);
+    const label=isMe(p)?'You':esc(S.names[p]).slice(0,8);
     const x=lt.plays.find(y=>y.p===p);
     if(!x) return `<div class="lt"><div class="card back" style="opacity:.15"></div>${label}</div>`;
-    const vis=!x.faceDown||x.revealed||x.p===ME;
+    const vis=!x.faceDown||x.revealed||isMe(x.p);
     const win=lt.winner===p?(team(p)!==team(ME)?'winew':'win'):'';
     return `<div class="lt">${vis?cardHTML(x.card,{cls:(x.faceDown&&!x.revealed?'fd ':'')+win}):backHTML(win)}${label}</div>`;
   }).join('');
@@ -1632,17 +1650,19 @@ function render(){
   $('#optStrict').checked=S.settings.strict;$('#optFast').checked=S.settings.fast;$('#optRule100').checked=S.settings.rule100!==false;$('#optTokens').value=String(S.settings.tokens);
   const on=$('#optName');if(on&&document.activeElement!==on) on.value=S.names[ME]||'';
   const client=ROLE==='client';
-  ['#optStrict','#optFast','#optRule100','#optTokens'].forEach(id=>$(id).disabled=client);
+  ['#optStrict','#optFast','#optRule100','#optTokens'].forEach(id=>$(id).disabled=client||SPECTATING);
+  if(on) on.disabled=SPECTATING;
   $('#setnote').hidden=!client;
-  $('#c304NewGameBtn').hidden=client;
-  if(!lvArmed) $('#leaveBtn').textContent=ROLE==='solo'?'Main menu':'Leave table';
+  $('#c304NewGameBtn').hidden=client||SPECTATING;
+  if(!lvArmed) $('#leaveBtn').textContent=ROLE==='solo'?'Main menu':(SPECTATING?'Stop watching':'Leave table');
   const pill=$('#netpill');
   if(ROLE==='solo') pill.hidden=true;
   else{
     pill.hidden=false;
     const humans=S.humans.filter(Boolean).length;
-    pill.textContent=ROLE==='host'?`Hosting · ${humans} player${humans>1?'s':''}`:'Online table';
+    pill.textContent=ROLE==='host'?`Hosting · ${humans} player${humans>1?'s':''}`:(SPECTATING?'Watching':'Online table');
   }
+  renderSpectatorsLine();
   if(ROLE==='host') broadcastState();
 }
 
@@ -1674,6 +1694,11 @@ function broadcastState(){
     const c = NET.conns[p];
     if (c && c.id) window.OnlineLobby.relay(c.id, { type:'state', S: viewFor(p), seat: p });
   }
+  // Spectators aren't a numbered seat, so they don't ride the per-seat loop
+  // above -- push each of them the same neutral view every time the state
+  // changes, or their board would freeze at whatever it looked like when
+  // they first tuned in.
+  for (const id of SPEC_IDS) window.OnlineLobby.relay(id, { type:'state', S: viewFor(-1), seat:-1 });
 }
 function lobbyPayloadFor(you){ return { type:'lobby', seats: NET.lobby.seats.map(s=>({name:s.name,kind:s.kind})), you }; }
 function broadcastLobby(){
@@ -1741,6 +1766,10 @@ function hostStartGame(){
   TABLE={names:seats.map((s,p)=>(s.name||SEATPOS[p]).trim().slice(0,16)||SEATPOS[p]),humans:seats.map(s=>s.kind!=='ai')};
   LOBBY.mode='hidden';renderLobby();
   S=null;newGame();
+  // Tells the lobby server this table is actually under way now -- that's
+  // the signal that flips it from "join" to "watch" in the Game Hub's
+  // happening-games list.
+  window.OnlineLobby.started();
 }
 
 // ---- guest side: messages relayed from the host (mirrors onClientData) ----
@@ -1772,8 +1801,53 @@ function onTableClosed(name){
 function handleRelay(fromId, data){
   if (ROLE==='host') onHostRelayData(fromId, data);
   else if (ROLE==='client') onClientData(data);
+  else if (ROLE==='spectator') onSpectatorRelay(data);
 }
-function active(){ return ROLE==='host'||ROLE==='client'; }
+function active(){ return ROLE==='host'||ROLE==='client'||ROLE==='spectator'; }
+
+// ---- spectator side: a read-only neutral view, pushed by the host ----
+function onSpectatorRelay(d){
+  if (!d||typeof d!=='object') return;
+  if (d.type==='state'){ S=d.S; render(); }
+}
+// Host side: a new spectator just connected -- send them a one-off snapshot
+// of the table as it stands (everyone's hands and any face-down cards
+// masked, same as a "no seat" view). From here on they ride the same
+// broadcastState() targeted-relay pipeline as everyone else.
+let SPEC_IDS=[];
+function onSpectatorJoined(id){
+  if (ROLE!=='host') return;
+  if (!SPEC_IDS.includes(id)) SPEC_IDS.push(id);
+  if (S) window.OnlineLobby.relay(id, {type:'state', S: viewFor(-1), seat:-1});
+}
+let SPEC_NAMES=[]; SPEC_IDS=[];
+function renderSpectatorsLine(){
+  const el=document.getElementById('c304SpecLine');
+  if (!el) return;
+  if (!SPEC_NAMES.length){ el.hidden=true; return; }
+  el.hidden=false;
+  el.textContent='👀 Watching: '+SPEC_NAMES.map(n=>esc(n)).join(', ');
+}
+function onSpectatorsList(names){
+  SPEC_NAMES=names||[];
+  renderSpectatorsLine();
+}
+function onWatchEnded(){
+  if (ROLE!=='spectator') return;
+  returnToCommonLobby('That game has ended.');
+}
+function leaveWatching(){
+  window.OnlineLobby.unwatch();
+  ROLE='solo'; SPECTATING=false; S=null; SPEC_NAMES=[]; SPEC_IDS=[];
+  hideRoot();
+  window.OnlineLobby.backToLobby();
+}
+function watchFromCommonLobby(gameId, myName){
+  ROLE='spectator'; ME=0; SPECTATING=true; S=null; SPEC_NAMES=[]; SPEC_IDS=[];
+  NET.conns={}; NET.seatOf={};
+  LOBBY.mode='hidden';
+  showRoot(); renderLobby();
+}
 
 /* ================= lobby UI (seat assignment, before/around a game) ================= */
 const LOBBY={mode:'closed',err:''};
@@ -1829,7 +1903,7 @@ function renderLobby(){
 }
 function returnToCommonLobby(message){
   clearTimeout(timer);
-  ROLE='solo'; S=null; NET.conns={}; NET.seatOf={};
+  ROLE='solo'; SPECTATING=false; S=null; NET.conns={}; NET.seatOf={}; SPEC_NAMES=[]; SPEC_IDS=[];
   if (message){ LOBBY.mode='closed'; LOBBY.err=message; renderLobby(); setTimeout(finishReturnToCommonLobby,2200); }
   else finishReturnToCommonLobby();
 }
@@ -1873,6 +1947,7 @@ document.addEventListener('click',e=>{
     el.textContent='Click again to start over';ngArmed=setTimeout(()=>{ngArmed=null;el.textContent='New game';},3000);return;
   }
   if (a==='leave'){
+    if (SPECTATING){ leaveWatching(); return; } // nothing at stake -- no confirm needed
     if (lvArmed){clearTimeout(lvArmed);lvArmed=null;leaveTable();return;}
     el.textContent=ROLE==='host'?'Click again to close the table':'Click again to leave';lvArmed=setTimeout(()=>{lvArmed=null;render();},3000);return;
   }
@@ -1892,6 +1967,7 @@ document.addEventListener('click',e=>{
   if (a==='ind'){act({t:'play',ind:true});return;}
 });
 function setMyName(v){
+  if (SPECTATING) return; // a spectator isn't seated at the table
   v=String(v||'').trim().slice(0,16);if(!v)return;
   if (ROLE==='client'){ window.OnlineLobby.relay(NET.hostId, {type:'rename', name:v}); return; }
   if (S){S.names[ME]=v;TABLE.names[ME]=v;render();}
@@ -1923,13 +1999,15 @@ function joinFromCommonLobby(hostId, myId, myName){
 }
 function teardown(){
   clearTimeout(timer);
-  ROLE='solo'; S=null; NET.conns={}; NET.seatOf={};
+  ROLE='solo'; SPECTATING=false; S=null; NET.conns={}; NET.seatOf={}; SPEC_NAMES=[]; SPEC_IDS=[];
   hideRoot();
 }
 
 window.CardGame304 = {
-  hostFromCommonLobby, joinFromCommonLobby, handleRelay,
+  hostFromCommonLobby, joinFromCommonLobby, watchFromCommonLobby, handleRelay,
   handleMemberJoined: onMemberJoined, handleTableClosed: onTableClosed,
+  handleSpectatorJoined: onSpectatorJoined, handleSpectatorsList: onSpectatorsList,
+  handleWatchEnded: onWatchEnded,
   active, teardown,
 };
 
@@ -2794,7 +2872,7 @@ var LESSONS = [
   // captured-from-the-screen opponent, or a real online opponent's name.
   function updatePlayerBars(status) {
     updateChessWaitingPanel();
-    if (mode === 'online' && !onlineInGame) {
+    if (mode === 'online' && !onlineInGame && !onlineSpectating) {
       playerBarTop.hidden = true;
       playerBarBottom.hidden = true;
       pauseClock();
@@ -2806,7 +2884,10 @@ var LESSONS = [
     const bottomColor = orientation;
     const topColor = orientation === 'w' ? 'b' : 'w';
     let topLabel, bottomLabel;
-    if (mode === 'online') {
+    if (mode === 'online' && onlineSpectating) {
+      topLabel = topColor === 'w' ? 'White' : 'Black';
+      bottomLabel = bottomColor === 'w' ? 'White' : 'Black';
+    } else if (mode === 'online') {
       topLabel = onlineOpponentName || 'Opponent';
       bottomLabel = onlineMyName || 'You';
     } else if (mode === 'manual') {
@@ -3116,12 +3197,14 @@ var LESSONS = [
   const onlineStatusEl = document.getElementById('onlineStatus');
   const onlineUsersList = document.getElementById('onlineUsersList');
   const onlineGamesList = document.getElementById('onlineGamesList');
+  const onlineLiveList = document.getElementById('onlineLiveList');
   const onlineHostChessBtn = document.getElementById('onlineHostChessBtn');
   const onlineHost304Btn = document.getElementById('onlineHost304Btn');
   const onlineChatLog = document.getElementById('onlineChatLog');
   const onlineChatInput = document.getElementById('onlineChatInput');
   const onlineChatSendBtn = document.getElementById('onlineChatSendBtn');
   const onlineLeaveBtn = document.getElementById('onlineLeaveBtn');
+  const newGameBtn = document.getElementById('newGameBtn');
   const playerBarTop = document.getElementById('playerBarTop');
   const playerBarBottom = document.getElementById('playerBarBottom');
   const playerNameTop = document.getElementById('playerNameTop');
@@ -3146,6 +3229,8 @@ var LESSONS = [
   let onlineInGame = false;
   let onlineHostingGameId = null;
   let onlineMyName = '';
+  let onlineSpectating = false; // watching someone else's live chess game, read-only
+  const chessSpectatorsLine = document.getElementById('chessSpectatorsLine');
 
   function setOnlineStatus(text) { onlineStatusEl.textContent = text; }
 
@@ -3178,6 +3263,7 @@ var LESSONS = [
   function updateHostButtonsAvailability() {
     const busy = mode !== 'online'
       || onlineInGame
+      || onlineSpectating
       || !!onlineHostingGameId
       || (card304RootEl && !card304RootEl.hidden);
     [onlineHostChessBtn, onlineHost304Btn].forEach(btn => {
@@ -3185,6 +3271,37 @@ var LESSONS = [
       btn.disabled = busy;
       btn.title = busy ? 'Leave your current game first' : '';
     });
+  }
+
+  // Read-only chess spectating: the board renders normally (moves arrive
+  // over the same relay channel players use), but nothing here can send a
+  // move, since `canMove` in trySelect() already requires onlineInGame,
+  // which a spectator never sets.
+  function startWatchingChess() {
+    onlineSpectating = true;
+    onlineInGame = false;
+    orientation = 'w';
+    buildBoardSquares(playBoardEl, orientation, false);
+    state = Chess.newGame(); selected = null; lastMove = null; gameOver = false;
+    onlineLeaveBtn.textContent = 'Stop watching (back to lobby)';
+    newGameBtn.hidden = true;
+    onlineShowStep('game');
+    render();
+  }
+  function stopWatchingChess(message) {
+    onlineSpectating = false;
+    newGameBtn.hidden = false;
+    onlineLeaveBtn.textContent = 'Leave game (back to lobby)';
+    updateChessSpectatorsLine([]);
+    if (message) setOnlineStatus(message);
+    onlineShowStep('lobby');
+    startNewGame();
+  }
+  function updateChessSpectatorsLine(names) {
+    if (!chessSpectatorsLine) return;
+    if (!names || !names.length) { chessSpectatorsLine.hidden = true; return; }
+    chessSpectatorsLine.hidden = false;
+    chessSpectatorsLine.textContent = '👀 Watching: ' + names.join(', ');
   }
 
   function onlineSend(msg) {
@@ -3237,7 +3354,33 @@ var LESSONS = [
       setOnlineStatus('Connected as ' + onlineMyName + '.');
       onlineShowStep('lobby');
     } else if (msg.t === 'lobby') {
-      renderOnlineLobby(msg.users, msg.games);
+      renderOnlineLobby(msg.users, msg.games, msg.live);
+    } else if (msg.t === 'watching') {
+      // A "Watch" click just got confirmed -- open the matching board or
+      // table in read-only spectator mode.
+      if (msg.kind === '304') {
+        if (window.CardGame304) window.CardGame304.watchFromCommonLobby(msg.id, onlineMyName);
+      } else {
+        startWatchingChess();
+      }
+      updateHostButtonsAvailability();
+    } else if (msg.t === 'spectatorJoined') {
+      // Someone just started watching this game -- if we're a player in it
+      // (not just its host, in 304's case, since either chess player has
+      // the same board), send them a one-off snapshot to catch them up.
+      if (window.CardGame304 && window.CardGame304.active()) {
+        window.CardGame304.handleSpectatorJoined(msg.id);
+      } else if (mode === 'online' && onlineInGame) {
+        onlineSend({ t: 'relay', to: msg.id, data: { type: 'sync', state: JSON.parse(JSON.stringify(state)), plyHistory: JSON.parse(JSON.stringify(plyHistory)) } });
+      }
+    } else if (msg.t === 'spectators') {
+      // Who's currently watching -- shown both to the players (inside their
+      // own game) and to every other spectator of the same game.
+      if (window.CardGame304 && window.CardGame304.active()) window.CardGame304.handleSpectatorsList(msg.names);
+      else updateChessSpectatorsLine(msg.names);
+    } else if (msg.t === 'watchEnded') {
+      if (onlineSpectating) stopWatchingChess('That game has ended.');
+      else if (window.CardGame304) window.CardGame304.handleWatchEnded();
     } else if (msg.t === 'hosted') {
       if (msg.kind === '304') {
         if (window.CardGame304) window.CardGame304.hostFromCommonLobby(onlineMyName);
@@ -3277,8 +3420,13 @@ var LESSONS = [
         if (match) doMove(match, { remote: true });
       } else if (data.type === 'newgame') {
         startNewGame();
+      } else if (data.type === 'sync' && onlineSpectating) {
+        // Catch-up snapshot for a spectator who just joined mid-game.
+        state = data.state; plyHistory = data.plyHistory || []; selected = null; lastMove = null; gameOver = false;
+        render();
       }
     } else if (msg.t === 'opponentLeft') {
+      if (onlineSpectating) { stopWatchingChess('That game has ended.'); return; }
       onlineInGame = false;
       playerNameTop.textContent = 'Opponent left the game';
       setTimeout(() => { onlineShowStep('lobby'); }, 1200);
@@ -3300,7 +3448,7 @@ var LESSONS = [
 
   const onlineCountBadge = document.getElementById('onlineCountBadge');
 
-  function renderOnlineLobby(users, games) {
+  function renderOnlineLobby(users, games, live) {
     if (onlineCountBadge) onlineCountBadge.textContent = users.length + (users.length === 1 ? ' online' : ' online');
 
     onlineUsersList.innerHTML = '';
@@ -3342,6 +3490,28 @@ var LESSONS = [
       onlineGamesList.appendChild(li);
     });
     if (!games.length) { const li = document.createElement('li'); li.className = 'lobby-empty'; li.textContent = 'No open games — host one!'; onlineGamesList.appendChild(li); }
+
+    onlineLiveList.innerHTML = '';
+    (live || []).forEach(g => {
+      const li = document.createElement('li');
+      const is304 = g.kind === '304';
+      const kindLabel = is304 ? '304 table' : 'Chess game';
+      const tile = document.createElement('div'); tile.className = 'rbx-game-tile';
+      const icon = document.createElement('span'); icon.className = 'rbx-game-icon ' + (is304 ? 'c304' : 'chess'); icon.textContent = is304 ? '🃏' : '♟️';
+      const info = document.createElement('span'); info.className = 'rbx-game-info';
+      const title = document.createElement('span'); title.className = 'rbx-game-title'; title.textContent = g.hostName + "'s " + kindLabel;
+      const meta = document.createElement('span'); meta.className = 'rbx-game-meta';
+      const pill = document.createElement('span'); pill.className = 'rbx-player-pill'; pill.textContent = g.count + '/' + g.capacity + ' players';
+      const watchPill = document.createElement('span'); watchPill.className = 'rbx-watch-pill'; watchPill.textContent = '👀 ' + g.watchers + (g.watchers === 1 ? ' watching' : ' watching');
+      meta.appendChild(pill); meta.appendChild(watchPill);
+      info.appendChild(title); info.appendChild(meta);
+      const btn = document.createElement('button'); btn.className = 'btn rbx-join-btn'; btn.textContent = 'Watch';
+      btn.addEventListener('click', () => onlineSend({ t: 'watch', id: g.id }));
+      tile.appendChild(icon); tile.appendChild(info); tile.appendChild(btn);
+      li.appendChild(tile);
+      onlineLiveList.appendChild(li);
+    });
+    if (!(live && live.length)) { const li = document.createElement('li'); li.className = 'lobby-empty'; li.textContent = 'No games in progress right now.'; onlineLiveList.appendChild(li); }
   }
 
   function appendOnlineChat(name, text) {
@@ -3368,6 +3538,11 @@ var LESSONS = [
   }
 
   function leaveOnlineGame() {
+    if (onlineSpectating) {
+      onlineSend({ t: 'unwatch' });
+      stopWatchingChess();
+      return;
+    }
     if (mode !== 'online') {
       // Reached here via the chess waiting page's "play vs. computer
       // instead" dropdown -- there's no real online game to leave, just
@@ -3387,7 +3562,7 @@ var LESSONS = [
 
   function resetOnlineConnection() {
     if (onlineWs) { try { onlineWs.close(); } catch (err) {} onlineWs = null; }
-    onlineInGame = false; onlineHostingGameId = null;
+    onlineInGame = false; onlineHostingGameId = null; onlineSpectating = false;
     if (window.CardGame304) window.CardGame304.teardown();
     onlineShowStep('connect');
     setOnlineStatus('Not connected.');
@@ -3443,6 +3618,8 @@ var LESSONS = [
     relay(to, data) { onlineSend({ t: 'relay', to: to, data: data }); },
     leave() { onlineSend({ t: 'leave' }); },
     backToLobby() { onlineShowStep('lobby'); },
+    started() { onlineSend({ t: 'started' }); },
+    unwatch() { onlineSend({ t: 'unwatch' }); },
   };
 
   render();
