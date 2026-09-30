@@ -606,8 +606,11 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
                on the right as clicking Host 304 Table already is. -->
           <div class="board-shell online-wait" id="chessHostWaitingPanel" hidden>
             <h2 style="margin:0 0 6px;">♟️ Your chess table is open</h2>
-            <p style="margin:0 0 18px; font-size:.9rem; color:var(--ink-dim);">Waiting for another player to join from the lobby's "Open games" list&hellip;</p>
-            <button class="btn" id="chessWaitCancelBtn" type="button">Cancel</button>
+            <p style="margin:0 0 18px; font-size:.9rem; color:var(--ink-dim);">Waiting for another player to join from the lobby's "Open games" list&hellip; or don't wait — play a computer opponent instead, same as a 304 table's empty seats.</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-primary" id="chessWaitVsComputerBtn" type="button">Play vs Computer instead</button>
+              <button class="btn" id="chessWaitCancelBtn" type="button">Cancel</button>
+            </div>
           </div>
 
           <div class="board-shell" id="chessBoardShell">
@@ -3317,6 +3320,7 @@ var LESSONS = [
   const chessBoardShell = document.getElementById('chessBoardShell');
   const coachCol = document.getElementById('coachCol');
   const chessWaitCancelBtn = document.getElementById('chessWaitCancelBtn');
+  const chessWaitVsComputerBtn = document.getElementById('chessWaitVsComputerBtn');
   let onlineOpponentName = '';
 
   function defaultOnlineServerUrl() {
@@ -3557,6 +3561,21 @@ var LESSONS = [
   onlineHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
   if (chessWaitCancelBtn) chessWaitCancelBtn.addEventListener('click', () => {
     onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel();
+  });
+  // 304 fills empty seats with a computer player the instant you host a
+  // table; chess had no equivalent while waiting for a human opponent. This
+  // drops the hosted listing and switches this tab straight into a local
+  // vs-computer game instead — the lobby connection (chat, presence, the
+  // Game Hub sidebar) stays up in the background so hosting/joining again
+  // later doesn't need reconnecting.
+  if (chessWaitVsComputerBtn) chessWaitVsComputerBtn.addEventListener('click', () => {
+    onlineSend({ t: 'cancel' });
+    onlineHostingGameId = null;
+    mode = 'engine'; modeSelect.value = 'engine'; savePref('mode', mode);
+    applyModeVisibility();
+    orientation = humanColor;
+    buildBoardSquares(playBoardEl, orientation, false);
+    startNewGame();
   });
   onlineChatSendBtn.addEventListener('click', sendOnlineChat);
   onlineChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOnlineChat(); });
