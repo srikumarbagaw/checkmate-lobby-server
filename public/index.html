@@ -605,8 +605,15 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
                on the right as clicking Host 304 Table already is. -->
           <div class="board-shell online-wait" id="chessHostWaitingPanel" hidden>
             <h2 style="margin:0 0 6px;">♟️ Your chess table is open</h2>
-            <p style="margin:0 0 18px; font-size:.9rem; color:var(--ink-dim);">Waiting for another player to join from the lobby's "Open games" list&hellip;</p>
-            <button class="btn" id="chessWaitCancelBtn" type="button">Cancel</button>
+            <p style="margin:0 0 14px; font-size:.9rem; color:var(--ink-dim);">Waiting for another player to join from the lobby's "Open games" list&hellip; or don't wait:</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <select id="chessWaitModeSelect" class="btn" aria-label="Play something else while you wait">
+                <option value="" selected disabled>Play vs. computer instead&hellip;</option>
+                <option value="engine">Vs. computer</option>
+                <option value="manual">You move both sides</option>
+              </select>
+              <button class="btn" id="chessWaitCancelBtn" type="button">Cancel</button>
+            </div>
           </div>
 
           <div class="board-shell" id="chessBoardShell">
@@ -3316,6 +3323,7 @@ var LESSONS = [
   const chessBoardShell = document.getElementById('chessBoardShell');
   const coachCol = document.getElementById('coachCol');
   const chessWaitCancelBtn = document.getElementById('chessWaitCancelBtn');
+  const chessWaitModeSelect = document.getElementById('chessWaitModeSelect');
   let onlineOpponentName = '';
 
   function defaultOnlineServerUrl() {
@@ -3556,6 +3564,24 @@ var LESSONS = [
   onlineHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
   if (chessWaitCancelBtn) chessWaitCancelBtn.addEventListener('click', () => {
     onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel();
+  });
+  // 304 fills empty seats with a computer player the instant you host a
+  // table; this gives chess the same option while waiting for a human
+  // opponent — picking a mode here drops the hosted listing and switches
+  // this tab straight into that local offline mode instead. The lobby
+  // connection (chat, presence, the Game Hub sidebar) stays up in the
+  // background so hosting/joining again later doesn't need reconnecting.
+  if (chessWaitModeSelect) chessWaitModeSelect.addEventListener('change', () => {
+    const chosen = chessWaitModeSelect.value;
+    if (!chosen) return;
+    onlineSend({ t: 'cancel' });
+    onlineHostingGameId = null;
+    mode = chosen; modeSelect.value = chosen; savePref('mode', mode);
+    applyModeVisibility();
+    orientation = mode === 'manual' ? 'w' : humanColor;
+    buildBoardSquares(playBoardEl, orientation, false);
+    startNewGame();
+    chessWaitModeSelect.value = '';
   });
   onlineChatSendBtn.addEventListener('click', sendOnlineChat);
   onlineChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOnlineChat(); });
