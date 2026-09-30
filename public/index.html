@@ -323,22 +323,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
 .player-bar.active-turn .player-bar-name,
 .player-bar.active-turn .player-bar-timer{color:#3a2200;}
 .player-bar[hidden]{display:none !important;}
-/* Post-connect "choose a game" promo, shown in place of the chess board
-   until an actual chess or 304 game has started — see #onlineLandingPanel. */
-.online-landing[hidden]{display:none !important;}
-.online-game-cards{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-@media (max-width:520px){.online-game-cards{grid-template-columns:1fr;}}
-.online-game-card{
-  display:flex; flex-direction:column; align-items:flex-start; gap:4px;
-  padding:22px 20px; border-radius:14px; border:1px solid var(--border);
-  background:var(--surface-2); cursor:pointer; text-align:left;
-  transition:transform .12s ease, border-color .15s, box-shadow .15s;
-}
-.online-game-card:hover{transform:translateY(-2px); border-color:var(--accent); box-shadow:var(--shadow);}
-.online-game-card:active{transform:translateY(0);}
-.online-game-icon{font-size:2rem; line-height:1;}
-.online-game-title{font-family:var(--font-display); font-weight:700; font-size:1.15rem; margin-top:4px;}
-.online-game-sub{font-size:.8rem; color:var(--ink-dim);}
+.online-wait[hidden]{display:none !important;}
 .hint-arrow-layer .hint-arrow-shaft{stroke:var(--hint-arrow); fill:none; stroke-linecap:butt; stroke-linejoin:miter; opacity:.82;}
 .hint-arrow-layer .hint-arrow-head{fill:var(--hint-arrow); opacity:.82;}
 .sq .coord{position:absolute; font-family:var(--font-mono); font-size:.78rem; font-weight:700; color:var(--ink-dim); opacity:.75; pointer-events:none;}
@@ -615,27 +600,14 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
           </div>
 
-          <!-- Shown instead of the chess board right after connecting to the
-               lobby, before any game has started — so the first thing a
-               newly-connected person sees promotes BOTH games, not just
-               chess (which the idle board behind it would otherwise imply
-               is the only thing on offer). Disappears the moment a chess or
-               304 game actually starts. -->
-          <div class="board-shell online-landing" id="onlineLandingPanel" hidden>
-            <h2 style="margin:0 0 4px;">Choose a game to play</h2>
-            <p style="margin:0 0 16px; font-size:.85rem; color:var(--ink-dim);">You're connected to the lobby — host a new table below, or join someone else's from "Open games" in the Game Hub sidebar.</p>
-            <div class="online-game-cards">
-              <button class="online-game-card" id="landingHostChessBtn" type="button">
-                <span class="online-game-icon">♟️</span>
-                <span class="online-game-title">Chess</span>
-                <span class="online-game-sub">1v1 · classic rules</span>
-              </button>
-              <button class="online-game-card c304" id="landingHost304Btn" type="button">
-                <span class="online-game-icon">🃏</span>
-                <span class="online-game-title">304</span>
-                <span class="online-game-sub">Tamil card game · up to 4 players</span>
-              </button>
-            </div>
+          <!-- Right pane state while you've hosted a chess table but no one
+               has joined yet -- mirrors 304's own "your table is open"
+               takeover so clicking Host Chess is just as clearly reflected
+               on the right as clicking Host 304 Table already is. -->
+          <div class="board-shell online-wait" id="chessHostWaitingPanel" hidden>
+            <h2 style="margin:0 0 6px;">♟️ Your chess table is open</h2>
+            <p style="margin:0 0 18px; font-size:.9rem; color:var(--ink-dim);">Waiting for another player to join from the lobby's "Open games" list&hellip;</p>
+            <button class="btn" id="chessWaitCancelBtn" type="button">Cancel</button>
           </div>
 
           <div class="board-shell" id="chessBoardShell">
@@ -3006,7 +2978,7 @@ var LESSONS = [
   // is across the board — the engine, the other manual-mode color, a
   // captured-from-the-screen opponent, or a real online opponent's name.
   function updatePlayerBars(status) {
-    updateOnlineLanding();
+    updateChessWaitingPanel();
     if (mode === 'online' && !onlineInGame) {
       playerBarTop.hidden = true;
       playerBarBottom.hidden = true;
@@ -3052,17 +3024,15 @@ var LESSONS = [
     updateClockDisplay();
   }
 
-  // Right after connecting, before any game has actually started, showing
-  // the idle chess board makes this look like a chess-only app. Swap it for
-  // a small "choose a game" promo instead, so a newly-connected person sees
-  // that 304 exists too, not just chess — it goes away again the moment a
-  // real chess or 304 game begins.
-  function updateOnlineLanding() {
-    if (!onlineLandingPanel) return;
-    const showLanding = mode === 'online' && !onlineInGame;
-    onlineLandingPanel.hidden = !showLanding;
-    if (chessBoardShell) chessBoardShell.hidden = showLanding;
-    if (coachCol) coachCol.hidden = showLanding;
+  // While you've hosted a chess table and no opponent has joined yet, show a
+  // "your table is open" waiting page in place of the idle board — matching
+  // how hosting a 304 table already takes over the right side immediately.
+  function updateChessWaitingPanel() {
+    if (!chessHostWaitingPanel) return;
+    const waiting = mode === 'online' && !!onlineHostingGameId && !onlineInGame;
+    chessHostWaitingPanel.hidden = !waiting;
+    if (chessBoardShell) chessBoardShell.hidden = waiting;
+    if (coachCol) coachCol.hidden = waiting;
   }
 
   // --- Per-color cumulative move-time clocks (mm:ss, right side of each bar) ---
@@ -3343,11 +3313,10 @@ var LESSONS = [
   const playerNameBottom = document.getElementById('playerNameBottom');
   const playerTimerTop = document.getElementById('playerTimerTop');
   const playerTimerBottom = document.getElementById('playerTimerBottom');
-  const onlineLandingPanel = document.getElementById('onlineLandingPanel');
+  const chessHostWaitingPanel = document.getElementById('chessHostWaitingPanel');
   const chessBoardShell = document.getElementById('chessBoardShell');
   const coachCol = document.getElementById('coachCol');
-  const landingHostChessBtn = document.getElementById('landingHostChessBtn');
-  const landingHost304Btn = document.getElementById('landingHost304Btn');
+  const chessWaitCancelBtn = document.getElementById('chessWaitCancelBtn');
   let onlineOpponentName = '';
 
   function defaultOnlineServerUrl() {
@@ -3440,6 +3409,7 @@ var LESSONS = [
         if (window.CardGame304) window.CardGame304.hostFromCommonLobby(onlineMyName);
       } else {
         onlineHostingGameId = msg.id;
+        updateChessWaitingPanel();
       }
     } else if (msg.t === 'chat') {
       appendOnlineChat(msg.name, msg.text);
@@ -3527,7 +3497,7 @@ var LESSONS = [
       if (isMine) { const waiting = document.createElement('span'); waiting.textContent = 'Waiting for players…'; meta.appendChild(waiting); }
       info.appendChild(title); info.appendChild(meta);
       const btn = document.createElement('button');
-      if (isMine) { btn.className = 'btn rbx-cancel-btn'; btn.textContent = 'Cancel'; btn.addEventListener('click', () => { onlineSend({ t: 'cancel' }); onlineHostingGameId = null; }); }
+      if (isMine) { btn.className = 'btn rbx-cancel-btn'; btn.textContent = 'Cancel'; btn.addEventListener('click', () => { onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel(); }); }
       else { btn.className = 'btn rbx-join-btn'; btn.textContent = 'Join'; btn.addEventListener('click', () => onlineSend({ t: 'join', id: g.id })); }
       tile.appendChild(icon); tile.appendChild(info); tile.appendChild(btn);
       li.appendChild(tile);
@@ -3585,10 +3555,9 @@ var LESSONS = [
   }
   onlineHostChessBtn.addEventListener('click', () => hostOnlineGame('chess'));
   onlineHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
-  // The "choose a game" promo shown before any game starts offers the same
-  // two host actions as the Game Hub sidebar, just more prominently.
-  if (landingHostChessBtn) landingHostChessBtn.addEventListener('click', () => hostOnlineGame('chess'));
-  if (landingHost304Btn) landingHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
+  if (chessWaitCancelBtn) chessWaitCancelBtn.addEventListener('click', () => {
+    onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel();
+  });
   onlineChatSendBtn.addEventListener('click', sendOnlineChat);
   onlineChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOnlineChat(); });
   onlineLeaveBtn.addEventListener('click', leaveOnlineGame);
