@@ -432,7 +432,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
     <p class="capture-hint">Enter your name and connect to the lobby to see who's online, chat, and start or join a game.</p>
     <div class="rbx-gate-fields">
       <input type="text" id="onlineNameInput" class="btn" placeholder="Your name" maxlength="20">
-      <input type="text" id="onlineServerInput" class="btn" placeholder="wss://your-app.onrender.com">
+      <input type="text" id="onlineServerInput" class="btn" placeholder="wss://your-app.onrender.com" readonly>
       <button class="btn btn-primary rbx-gate-enter" id="onlineConnectBtn">Enter Lobby</button>
     </div>
     <p class="capture-status" id="onlineStatus">Not connected.</p>
@@ -570,8 +570,6 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
             <div class="lobby-grid">
               <div class="lobby-col">
-                <div class="lobby-section-title">Online now</div>
-                <ul class="lobby-list" id="onlineUsersList"></ul>
                 <div class="lobby-section-title">Host a game</div>
                 <div class="rbx-create-row">
                   <button class="btn btn-primary rbx-create-card" id="onlineHostChessBtn">
@@ -595,6 +593,8 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
                   <input type="text" id="onlineChatInput" class="btn" placeholder="Say something..." style="flex:1;">
                   <button class="btn" id="onlineChatSendBtn">Send</button>
                 </div>
+                <div class="lobby-section-title">Online now</div>
+                <ul class="lobby-list" id="onlineUsersList"></ul>
               </div>
             </div>
           </div>
