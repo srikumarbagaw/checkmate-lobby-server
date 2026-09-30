@@ -3537,6 +3537,18 @@ var LESSONS = [
   }
 
   function leaveOnlineGame() {
+    if (mode !== 'online') {
+      // Reached here via the chess waiting page's "play vs. computer
+      // instead" dropdown -- there's no real online game to leave, just
+      // switch back to the connected lobby's normal idle view.
+      mode = 'online'; modeSelect.value = 'online'; savePref('mode', mode);
+      applyModeVisibility();
+      orientation = humanColor;
+      buildBoardSquares(playBoardEl, orientation, false);
+      startNewGame();
+      onlineShowStep('lobby');
+      return;
+    }
     onlineSend({ t: 'leave' });
     onlineInGame = false;
     onlineShowStep('lobby');
@@ -3582,6 +3594,11 @@ var LESSONS = [
     buildBoardSquares(playBoardEl, orientation, false);
     startNewGame();
     chessWaitModeSelect.value = '';
+    // There's no online game to leave, but you're still connected and this
+    // tab is no longer showing the lobby's idle view -- keep the header's
+    // "Leave game" button available so there's an obvious way back, same as
+    // it is during a real online match.
+    onlineLeaveBtn.hidden = false;
   });
   onlineChatSendBtn.addEventListener('click', sendOnlineChat);
   onlineChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOnlineChat(); });
