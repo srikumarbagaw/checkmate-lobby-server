@@ -205,6 +205,8 @@ body.rbx-hub-open{padding-left:356px;}
 #onlineHost304Btn.rbx-create-card{background:linear-gradient(160deg, var(--rbx-red), #C81640); box-shadow:0 6px 0 #A30F34, 0 10px 20px -8px rgba(200,22,64,.5);}
 .rbx-create-card:hover{transform:translateY(-2px);}
 .rbx-create-card:active{transform:translateY(1px) !important; box-shadow:0 3px 0 rgba(0,0,0,.4) !important;}
+.rbx-create-card:disabled{opacity:.45; cursor:not-allowed; filter:grayscale(.3);}
+.rbx-create-card:disabled:hover{transform:none;}
 
 .rbx-lobby #onlineGamesList{max-height:220px;}
 .rbx-lobby #onlineGamesList li{background:var(--rbx-card); border:1px solid var(--rbx-line); border-radius:14px; padding:10px 12px; transition:transform .12s ease, box-shadow .12s ease;}
@@ -3173,6 +3175,24 @@ var LESSONS = [
     onlineLeaveBtn.hidden = step !== 'game';
     setHubSidebarVisible(step !== 'connect');
     updatePlayerBars();
+    updateHostButtonsAvailability();
+  }
+
+  // "Host Chess" / "Host 304 Table" only make sense when this tab isn't
+  // already occupying some other table -- a real online match, an offline
+  // vs-computer/manual chess game reached via the waiting page's dropdown,
+  // a 304 table (lobby or in-progress), or a chess table you're already
+  // hosting and waiting on. Leave that game first, then hosting opens back up.
+  function updateHostButtonsAvailability() {
+    const busy = mode !== 'online'
+      || onlineInGame
+      || !!onlineHostingGameId
+      || (window.CardGame304 && window.CardGame304.active());
+    [onlineHostChessBtn, onlineHost304Btn].forEach(btn => {
+      if (!btn) return;
+      btn.disabled = busy;
+      btn.title = busy ? 'Leave your current game first' : '';
+    });
   }
 
   function onlineSend(msg) {
@@ -3233,6 +3253,7 @@ var LESSONS = [
         onlineHostingGameId = msg.id;
         updateChessWaitingPanel();
       }
+      updateHostButtonsAvailability();
     } else if (msg.t === 'chat') {
       appendOnlineChat(msg.name, msg.text);
     } else if (msg.t === 'gameStart') {
@@ -3244,6 +3265,7 @@ var LESSONS = [
       startNewGame();
     } else if (msg.t === 'joinedRoom') {
       if (msg.kind === '304' && window.CardGame304) window.CardGame304.joinFromCommonLobby(msg.hostId, msg.myId, onlineMyName);
+      updateHostButtonsAvailability();
     } else if (msg.t === 'memberJoined') {
       if (window.CardGame304) window.CardGame304.handleMemberJoined(msg.id, msg.name);
     } else if (msg.t === 'memberLeft') {
@@ -3319,7 +3341,7 @@ var LESSONS = [
       if (isMine) { const waiting = document.createElement('span'); waiting.textContent = 'Waiting for players…'; meta.appendChild(waiting); }
       info.appendChild(title); info.appendChild(meta);
       const btn = document.createElement('button');
-      if (isMine) { btn.className = 'btn rbx-cancel-btn'; btn.textContent = 'Cancel'; btn.addEventListener('click', () => { onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel(); }); }
+      if (isMine) { btn.className = 'btn rbx-cancel-btn'; btn.textContent = 'Cancel'; btn.addEventListener('click', () => { onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel(); updateHostButtonsAvailability(); }); }
       else { btn.className = 'btn rbx-join-btn'; btn.textContent = 'Join'; btn.addEventListener('click', () => onlineSend({ t: 'join', id: g.id })); }
       tile.appendChild(icon); tile.appendChild(info); tile.appendChild(btn);
       li.appendChild(tile);
@@ -3390,7 +3412,7 @@ var LESSONS = [
   onlineHostChessBtn.addEventListener('click', () => hostOnlineGame('chess'));
   onlineHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
   if (chessWaitCancelBtn) chessWaitCancelBtn.addEventListener('click', () => {
-    onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel();
+    onlineSend({ t: 'cancel' }); onlineHostingGameId = null; updateChessWaitingPanel(); updateHostButtonsAvailability();
   });
   // 304 fills empty seats with a computer player the instant you host a
   // table; this gives chess the same option while waiting for a human
@@ -3414,6 +3436,7 @@ var LESSONS = [
     // "Leave game" button available so there's an obvious way back, same as
     // it is during a real online match.
     onlineLeaveBtn.hidden = false;
+    updateHostButtonsAvailability();
   });
   onlineChatSendBtn.addEventListener('click', sendOnlineChat);
   onlineChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOnlineChat(); });
