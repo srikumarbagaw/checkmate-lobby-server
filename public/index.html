@@ -301,16 +301,44 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
    whichever side's turn it is gets highlighted. Plain rows in the normal
    layout (not overlaid on the squares), solid background either way. */
 .player-bar{
-  display:flex; align-items:center; justify-content:flex-start;
+  display:flex; align-items:center; justify-content:space-between;
   padding:7px 12px; border-radius:8px; margin-bottom:6px;
   background:var(--surface-2); border:1px solid var(--border);
   transition:background .15s, border-color .15s;
 }
 .player-bar:last-of-type{margin-bottom:0; margin-top:6px;}
 .player-bar-name{font-weight:600; font-size:.9rem; color:var(--ink-dim);}
-.player-bar.active-turn{background:var(--accent); border-color:var(--accent-strong);}
-.player-bar.active-turn .player-bar-name{color:var(--accent-ink);}
+.player-bar-timer{
+  font-family:var(--font-mono); font-weight:700; font-size:.9rem;
+  color:var(--ink-dim); letter-spacing:.02em; font-variant-numeric:tabular-nums;
+}
+@keyframes playerBarFlash{
+  0%, 100%{ background:#ff9800; border-color:#ff9800; }
+  50%{ background:#ffc766; border-color:#ffb347; }
+}
+.player-bar.active-turn{
+  background:#ff9800; border-color:#ff9800;
+  animation:playerBarFlash 1s ease-in-out infinite;
+}
+.player-bar.active-turn .player-bar-name,
+.player-bar.active-turn .player-bar-timer{color:#3a2200;}
 .player-bar[hidden]{display:none !important;}
+/* Post-connect "choose a game" promo, shown in place of the chess board
+   until an actual chess or 304 game has started — see #onlineLandingPanel. */
+.online-landing[hidden]{display:none !important;}
+.online-game-cards{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+@media (max-width:520px){.online-game-cards{grid-template-columns:1fr;}}
+.online-game-card{
+  display:flex; flex-direction:column; align-items:flex-start; gap:4px;
+  padding:22px 20px; border-radius:14px; border:1px solid var(--border);
+  background:var(--surface-2); cursor:pointer; text-align:left;
+  transition:transform .12s ease, border-color .15s, box-shadow .15s;
+}
+.online-game-card:hover{transform:translateY(-2px); border-color:var(--accent); box-shadow:var(--shadow);}
+.online-game-card:active{transform:translateY(0);}
+.online-game-icon{font-size:2rem; line-height:1;}
+.online-game-title{font-family:var(--font-display); font-weight:700; font-size:1.15rem; margin-top:4px;}
+.online-game-sub{font-size:.8rem; color:var(--ink-dim);}
 .hint-arrow-layer .hint-arrow-shaft{stroke:var(--hint-arrow); fill:none; stroke-linecap:butt; stroke-linejoin:miter; opacity:.82;}
 .hint-arrow-layer .hint-arrow-head{fill:var(--hint-arrow); opacity:.82;}
 .sq .coord{position:absolute; font-family:var(--font-mono); font-size:.78rem; font-weight:700; color:var(--ink-dim); opacity:.75; pointer-events:none;}
@@ -587,9 +615,33 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
           </div>
 
-          <div class="board-shell">
+          <!-- Shown instead of the chess board right after connecting to the
+               lobby, before any game has started — so the first thing a
+               newly-connected person sees promotes BOTH games, not just
+               chess (which the idle board behind it would otherwise imply
+               is the only thing on offer). Disappears the moment a chess or
+               304 game actually starts. -->
+          <div class="board-shell online-landing" id="onlineLandingPanel" hidden>
+            <h2 style="margin:0 0 4px;">Choose a game to play</h2>
+            <p style="margin:0 0 16px; font-size:.85rem; color:var(--ink-dim);">You're connected to the lobby — host a new table below, or join someone else's from "Open games" in the Game Hub sidebar.</p>
+            <div class="online-game-cards">
+              <button class="online-game-card" id="landingHostChessBtn" type="button">
+                <span class="online-game-icon">♟️</span>
+                <span class="online-game-title">Chess</span>
+                <span class="online-game-sub">1v1 · classic rules</span>
+              </button>
+              <button class="online-game-card c304" id="landingHost304Btn" type="button">
+                <span class="online-game-icon">🃏</span>
+                <span class="online-game-title">304</span>
+                <span class="online-game-sub">Tamil card game · up to 4 players</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="board-shell" id="chessBoardShell">
             <div class="player-bar" id="playerBarTop">
               <span class="player-bar-name" id="playerNameTop">Opponent</span>
+              <span class="player-bar-timer" id="playerTimerTop">0:00</span>
             </div>
             <div class="board-frame">
               <div class="board" id="playBoard"></div>
@@ -597,6 +649,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
             <div class="player-bar" id="playerBarBottom">
               <span class="player-bar-name" id="playerNameBottom">You</span>
+              <span class="player-bar-timer" id="playerTimerBottom">0:00</span>
             </div>
             <div class="eval-row">
               <span>W</span>
@@ -606,7 +659,7 @@ select.btn{font-weight:600; appearance:none; padding-right:28px;
             </div>
           </div>
         </div>
-        <aside class="coach-col">
+        <aside class="coach-col" id="coachCol">
           <div class="card coach-card">
             <div class="coach-status" id="coachStatus">White to move</div>
             <div class="feedback" id="feedbackBox"></div>
@@ -2926,7 +2979,7 @@ var LESSONS = [
     renderMoveList();
     renderEval();
     renderStatusLine(status);
-    updatePlayerBars();
+    updatePlayerBars(status);
     if (!status.over) renderCoach(); else renderGameOver(status);
     const posInfoEl = document.getElementById('debugPositionInfo');
     if (posInfoEl) {
@@ -2952,10 +3005,12 @@ var LESSONS = [
   // "my" side (matching board orientation); the top bar is whoever/whatever
   // is across the board — the engine, the other manual-mode color, a
   // captured-from-the-screen opponent, or a real online opponent's name.
-  function updatePlayerBars() {
+  function updatePlayerBars(status) {
+    updateOnlineLanding();
     if (mode === 'online' && !onlineInGame) {
       playerBarTop.hidden = true;
       playerBarBottom.hidden = true;
+      pauseClock();
       return;
     }
     playerBarTop.hidden = false;
@@ -2983,7 +3038,73 @@ var LESSONS = [
     const activeColor = state.turn;
     playerBarTop.classList.toggle('active-turn', activeColor === topColor);
     playerBarBottom.classList.toggle('active-turn', activeColor === bottomColor);
+
+    // Cumulative "time used" clock: keeps running for whichever color is on
+    // the move, pauses the instant the game is over (checkmate/stalemate/
+    // draw), and never resets on its own — only startNewGame() does that.
+    const over = status ? status.over : Chess.gameStatus(state).over;
+    if (over) {
+      pauseClock();
+    } else if (clockRunningColor !== activeColor) {
+      pauseClock();
+      resumeClockFor(activeColor);
+    }
+    updateClockDisplay();
   }
+
+  // Right after connecting, before any game has actually started, showing
+  // the idle chess board makes this look like a chess-only app. Swap it for
+  // a small "choose a game" promo instead, so a newly-connected person sees
+  // that 304 exists too, not just chess — it goes away again the moment a
+  // real chess or 304 game begins.
+  function updateOnlineLanding() {
+    if (!onlineLandingPanel) return;
+    const showLanding = mode === 'online' && !onlineInGame;
+    onlineLandingPanel.hidden = !showLanding;
+    if (chessBoardShell) chessBoardShell.hidden = showLanding;
+    if (coachCol) coachCol.hidden = showLanding;
+  }
+
+  // --- Per-color cumulative move-time clocks (mm:ss, right side of each bar) ---
+  let timeUsedMs = { w: 0, b: 0 };
+  let clockRunningColor = null;
+  let clockStartTs = 0;
+
+  function pauseClock() {
+    if (clockRunningColor) {
+      timeUsedMs[clockRunningColor] += Date.now() - clockStartTs;
+      clockRunningColor = null;
+    }
+  }
+  function resumeClockFor(color) {
+    clockRunningColor = color;
+    clockStartTs = Date.now();
+  }
+  function resetClocks() {
+    pauseClock();
+    timeUsedMs = { w: 0, b: 0 };
+    clockRunningColor = null;
+    clockStartTs = 0;
+    updateClockDisplay();
+  }
+  function formatClock(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+  function currentDisplayMs(color) {
+    let ms = timeUsedMs[color];
+    if (clockRunningColor === color) ms += Date.now() - clockStartTs;
+    return ms;
+  }
+  function updateClockDisplay() {
+    const bottomColor = orientation;
+    const topColor = orientation === 'w' ? 'b' : 'w';
+    if (playerTimerTop) playerTimerTop.textContent = formatClock(currentDisplayMs(topColor));
+    if (playerTimerBottom) playerTimerBottom.textContent = formatClock(currentDisplayMs(bottomColor));
+  }
+  setInterval(updateClockDisplay, 500);
 
   function renderEval() {
     const cp = Chess.evaluate(state);
@@ -3160,6 +3281,7 @@ var LESSONS = [
 
   function startNewGame() {
     state = Chess.newGame(); undoStack = []; plyHistory = []; selected=null; lastMove=null; hint=null; gameOver=false;
+    resetClocks();
     showFeedback(null);
     render();
     if (mode === 'engine' && state.turn !== humanColor) setTimeout(engineMove, 350);
@@ -3219,6 +3341,13 @@ var LESSONS = [
   const playerBarBottom = document.getElementById('playerBarBottom');
   const playerNameTop = document.getElementById('playerNameTop');
   const playerNameBottom = document.getElementById('playerNameBottom');
+  const playerTimerTop = document.getElementById('playerTimerTop');
+  const playerTimerBottom = document.getElementById('playerTimerBottom');
+  const onlineLandingPanel = document.getElementById('onlineLandingPanel');
+  const chessBoardShell = document.getElementById('chessBoardShell');
+  const coachCol = document.getElementById('coachCol');
+  const landingHostChessBtn = document.getElementById('landingHostChessBtn');
+  const landingHost304Btn = document.getElementById('landingHost304Btn');
   let onlineOpponentName = '';
 
   function defaultOnlineServerUrl() {
@@ -3456,6 +3585,10 @@ var LESSONS = [
   }
   onlineHostChessBtn.addEventListener('click', () => hostOnlineGame('chess'));
   onlineHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
+  // The "choose a game" promo shown before any game starts offers the same
+  // two host actions as the Game Hub sidebar, just more prominently.
+  if (landingHostChessBtn) landingHostChessBtn.addEventListener('click', () => hostOnlineGame('chess'));
+  if (landingHost304Btn) landingHost304Btn.addEventListener('click', () => hostOnlineGame('304'));
   onlineChatSendBtn.addEventListener('click', sendOnlineChat);
   onlineChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendOnlineChat(); });
   onlineLeaveBtn.addEventListener('click', leaveOnlineGame);
